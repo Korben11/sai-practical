@@ -1,10 +1,42 @@
 package broker.gui;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.TextMessage;
+import java.text.MessageFormat;
+
 public class ListViewLine {
+
+    private Message loanRequestMessage;
+    private Message loanReplyMessage;
+    private Message bankRequestMessage;
+    private Message bankReplyMessage;
+
+    public ListViewLine(Message loanRequestMessage, Message bankRequestMessage) {
+        this.loanRequestMessage = loanRequestMessage;
+        this.loanReplyMessage = null;
+        this.bankRequestMessage = bankRequestMessage;
+        this.bankReplyMessage = null;
+    }
 
     @Override
     public String toString() {
-        return "IMPLEMENT ME:";
-//        return bankInterestRequest.toString() + "  --->  " + ((bankInterestReply !=null)? bankInterestReply.toString():"waiting for loan reply...");
+
+        TextMessage textMessageLoanRequest = (TextMessage) this.loanRequestMessage;
+        TextMessage textMessageLoanResponse = null;
+        String reply = "waiting...";
+
+        try {
+            if (loanReplyMessage != null) {
+                textMessageLoanResponse = (TextMessage) loanReplyMessage;
+                reply = textMessageLoanResponse.getText();
+            }
+            return MessageFormat.format("{0} ---> {1}", textMessageLoanRequest.getText(), reply);
+
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+
+        return "";
     }
 }
