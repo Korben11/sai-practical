@@ -8,17 +8,17 @@ package loanclient.model;
 public class LoanReply {
 
         private double interest; // the interest that the bank offers for the requested loan
-        private String bankID; // the unique quote identification of the bank which makes the offer
+        private String bankId; // the unique quote identification of the bank which makes the offer
 
     public LoanReply() {
         super();
         this.interest = 0;
-        this.bankID = "";
+        this.bankId = "";
     }
     public LoanReply(double interest, String bankId) {
         super();
         this.interest = interest;
-        this.bankID = bankId;
+        this.bankId = bankId;
     }
 
     public double getInterest() {
@@ -29,19 +29,19 @@ public class LoanReply {
         this.interest = interest;
     }
 
-    public String getBankID() {
-        return bankID;
+    public String getBankId() {
+        return bankId;
     }
 
-    public void setBankID(String bankID) {
-        this.bankID = bankID;
+    public void setBankId(String bankId) {
+        this.bankId = bankId;
     }
 
     @Override
     public String toString() {
         return "LoanReply{" +
                 "interest=" + interest +
-                ", bankID='" + bankID + '\'' +
+                ", bankId='" + bankId + '\'' +
                 '}';
     }
 }
