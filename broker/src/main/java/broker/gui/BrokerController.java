@@ -35,10 +35,12 @@ public class BrokerController implements Initializable {
     private ConnectionFactory connectionFactory;
     private Session session;
 
-    private Destination loanReceiveDestination;;
+    private Destination loanReceiveDestination;
+    ;
     private MessageConsumer loanMessageConsumer;
 
-    private Destination bankReceiveDestination;;
+    private Destination bankReceiveDestination;
+    ;
     private MessageConsumer bankMessageConsumer;
 
     private Destination loanSendDestination;
@@ -102,7 +104,7 @@ public class BrokerController implements Initializable {
                             lvBroker.getItems().add(listViewLine);
 
                             // map requesting messages by bankRequestMessageId
-                            lvlToMessageId.put(bankRequestMessage.getJMSCorrelationID(), listViewLine);
+                            lvlToMessageId.put(bankRequestMessage.getJMSMessageID(), listViewLine);
 
                             // refresh UI
                             lvBroker.refresh();
@@ -123,6 +125,16 @@ public class BrokerController implements Initializable {
                     TextMessage textMessage = (TextMessage) message;
                     try {
                         System.out.println("bankMessageConsumer received: " + textMessage.getText());
+                        ListViewLine listViewLine = (ListViewLine) lvlToMessageId.get(message.getJMSCorrelationID());
+                        if (listViewLine == null)
+                            System.out.println("problem");
+
+                        listViewLine.setBankReplyMessage(message);
+
+                        listViewLine.setLoanReplyMessage(
+                                sendReply(textMessage.getText(), listViewLine.getLoanRequestMessage()));
+
+                        lvBroker.refresh();
                     } catch (JMSException e) {
                         e.printStackTrace();
                     }
@@ -133,6 +145,28 @@ public class BrokerController implements Initializable {
         } catch (NamingException | JMSException e) {
             e.printStackTrace();
         }
+    }
+
+    private Message sendReply(String reply, Message requestMessage) {
+
+        Message msg = null;
+        try {
+            // create a text message
+            msg = session.createTextMessage(reply);
+
+            // set correlation id
+            msg.setJMSCorrelationID(requestMessage.getJMSMessageID());
+
+            loanMessageProducer.send(msg);
+
+            System.out.println("sent reply " + msg);
+
+            return msg;
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @Override

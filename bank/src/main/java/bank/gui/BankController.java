@@ -93,7 +93,7 @@ public class BankController implements Initializable {
     }
 
     @FXML
-    public void btnSendBankInterestReplyClicked(){
+    public void btnSendBankInterestReplyClicked() {
 
         if (!lvBankRequestReply.hasProperties()) return;
 
@@ -130,13 +130,14 @@ public class BankController implements Initializable {
 
     /**
      * This method returns the line of lvMessages which contains the given loan request.
+     *
      * @param request BankInterestRequest for which the line of lvMessages should be found and returned
      * @return The ListView line of lvMessages which contains the given request
      */
     private ListViewLine getRequestReply(BankInterestRequest request) {
 
         for (int i = 0; i < lvBankRequestReply.getItems().size(); i++) {
-            ListViewLine rr =  lvBankRequestReply.getItems().get(i);
+            ListViewLine rr = lvBankRequestReply.getItems().get(i);
             if (rr.getBankInterestRequest() != null && rr.getBankInterestRequest() == request) {
                 return rr;
             }

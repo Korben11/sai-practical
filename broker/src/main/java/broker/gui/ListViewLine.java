@@ -12,6 +12,18 @@ public class ListViewLine {
     private Message bankRequestMessage;
     private Message bankReplyMessage;
 
+    public Message getLoanRequestMessage() {
+        return loanRequestMessage;
+    }
+
+    public void setLoanReplyMessage(Message loanReplyMessage) {
+        this.loanReplyMessage = loanReplyMessage;
+    }
+
+    public void setBankReplyMessage(Message bankReplyMessage) {
+        this.bankReplyMessage = bankReplyMessage;
+    }
+
     public ListViewLine(Message loanRequestMessage, Message bankRequestMessage) {
         this.loanRequestMessage = loanRequestMessage;
         this.loanReplyMessage = null;
