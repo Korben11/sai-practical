@@ -1,5 +1,9 @@
 package bank.model;
 
+import com.google.gson.annotations.Expose;
+
+import javax.jms.Message;
+
 /**
  *
  * This class stores all information about an request from a bank to offer
@@ -9,6 +13,17 @@ public class BankInterestRequest {
 
     private int amount; // the ammount to borrow
     private int time; // the time-span of the loan in years
+
+    public Message getMessage() {
+        return message;
+    }
+
+    public void setMessage(Message message) {
+        this.message = message;
+    }
+
+    @Expose(serialize = false, deserialize = false)
+    private Message message;
 
     public BankInterestRequest() {
         super();

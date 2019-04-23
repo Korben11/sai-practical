@@ -74,8 +74,8 @@ public class LoanClientController implements Initializable {
                 public void onMessage(Message message) {
                     TextMessage textMessage = (TextMessage) message;
                     try {
-                        LoanReply questionReply = gson.fromJson(textMessage.getText(), LoanReply.class);
-                        System.out.println("New message received: " + questionReply);
+                        LoanReply loanReply = gson.fromJson(textMessage.getText(), LoanReply.class);
+                        System.out.println("New message received: " + loanReply);
                     } catch (JMSException e) {
                         e.printStackTrace();
                     }

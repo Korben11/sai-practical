@@ -43,7 +43,7 @@
                 <Label text="Label"/>
                 <TextField fx:id="tfInterest" GridPane.columnIndex="1"/>
                 <Button fx:id="btnSendBankInterestReply" mnemonicParsing="false" text="send bank interest reply"
-                        GridPane.columnIndex="2"/>
+                        GridPane.columnIndex="2" onAction="#btnSendBankInterestReplyClicked"/>
             </children>
         </GridPane>
     </bottom>
