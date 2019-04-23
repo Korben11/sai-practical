@@ -13,6 +13,8 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
@@ -45,7 +47,14 @@ public class LoanClientController implements Initializable {
     public TextField tfTime;
     public ListView<ListViewLine> lvLoanRequestReply;
 
+    // Map to store request messageId (correlationId for reply)
+    public Map<String, ListViewLine> lvlToMessageId;
+
     public LoanClientController() {
+
+        // init map
+        lvlToMessageId = new HashMap<>();
+
         gson = new Gson();
 
         props = new Properties();
@@ -73,12 +82,20 @@ public class LoanClientController implements Initializable {
                 @Override
                 public void onMessage(Message message) {
                     TextMessage textMessage = (TextMessage) message;
+
                     try {
+                        ListViewLine listViewLine = (ListViewLine) lvlToMessageId.get(message.getJMSCorrelationID());
+                        if (listViewLine == null)
+                            return;
+
                         LoanReply loanReply = gson.fromJson(textMessage.getText(), LoanReply.class);
+                        listViewLine.setLoanReply(loanReply);
                         System.out.println("New message received: " + loanReply);
                     } catch (JMSException e) {
                         e.printStackTrace();
                     }
+
+                    lvLoanRequestReply.refresh();
                 }
             });
 
@@ -104,6 +121,8 @@ public class LoanClientController implements Initializable {
         try {
             message = session.createTextMessage(gson.toJson(loanRequest));
             messageProducer.send(message);
+
+            lvlToMessageId.put(message.getJMSMessageID(), listViewLine);
         } catch (JMSException e) {
             e.printStackTrace();
         }

@@ -126,11 +126,7 @@ public class BrokerController implements Initializable {
                     try {
                         System.out.println("bankMessageConsumer received: " + textMessage.getText());
                         ListViewLine listViewLine = (ListViewLine) lvlToMessageId.get(message.getJMSCorrelationID());
-                        if (listViewLine == null)
-                            System.out.println("problem");
-
                         listViewLine.setBankReplyMessage(message);
-
                         listViewLine.setLoanReplyMessage(
                                 sendReply(textMessage.getText(), listViewLine.getLoanRequestMessage()));
 
