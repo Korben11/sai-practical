@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<!--<?import java.lang.*?>-->
+<!--<?import java.util.*?>-->
+<!--<?import javafx.scene.*?>-->
+<!--<?import javafx.scene.control.*?>-->
+<!--<?import javafx.scene.layout.*?>-->
+<!--<AnchorPane xmlns="http://javafx.com/javafx"-->
+<!--xmlns:fx="http://javafx.com/fxml"-->
+<!--fx:controller="Broker"-->
+<!--prefHeight="400.0" prefWidth="600.0">-->
+<!--</AnchorPane>-->
+
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="broker.gui.BrokerController">
+    <center>
+        <ScrollPane hbarPolicy="AS_NEEDED" prefHeight="300.0" prefWidth="500.0" vbarPolicy="AS_NEEDED" BorderPane.alignment="CENTER">
+            <content>
+                <BorderPane prefHeight="300.0" prefWidth="500.0" BorderPane.alignment="CENTER">
+                    <center>
+                        <ListView fx:id="lvBroker" prefHeight="300.0" prefWidth="500.0" />
+                    </center>
+                </BorderPane>
+            </content>
+        </ScrollPane>
+    </center>
+
+
+</BorderPane>
