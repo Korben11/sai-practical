@@ -1,4 +1,4 @@
-package loanclient.model;
+package jmsmessenger.models;
 
 /**
  *

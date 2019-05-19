@@ -1,21 +1,22 @@
-package bank.model;
+package jmsmessenger.models;
 
 /**
- * This class stores information about the bank reply
- *  to a loan request of the specific client
- * 
+ *
+ * This class stores all information about a bank offer
+ * as a response to a client loan request.
  */
-public class BankInterestReply {
+public class LoanReply {
 
-    private double interest; // the interest that the bank offers for the requested loan
-    private String bankId; // the unique quote identification of the bank which makes the offer
-    
-    public BankInterestReply() {
+        private double interest; // the interest that the bank offers for the requested loan
+        private String bankId; // the unique quote identification of the bank which makes the offer
+
+    public LoanReply() {
+        super();
         this.interest = 0;
         this.bankId = "";
     }
-    
-    public BankInterestReply(double interest, String bankId) {
+    public LoanReply(double interest, String bankId) {
+        super();
         this.interest = interest;
         this.bankId = bankId;
     }
@@ -38,7 +39,7 @@ public class BankInterestReply {
 
     @Override
     public String toString() {
-        return "BankInterestReply{" +
+        return "LoanReply{" +
                 "interest=" + interest +
                 ", bankId='" + bankId + '\'' +
                 '}';

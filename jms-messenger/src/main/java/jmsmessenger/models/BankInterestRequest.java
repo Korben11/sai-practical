@@ -1,4 +1,4 @@
-package bank.model;
+package jmsmessenger.models;
 
 import com.google.gson.annotations.Expose;
 
