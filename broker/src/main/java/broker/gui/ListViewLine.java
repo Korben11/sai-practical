@@ -1,54 +1,52 @@
 package broker.gui;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.TextMessage;
+import jmsmessenger.models.BankInterestReply;
+import jmsmessenger.models.BankInterestRequest;
+import jmsmessenger.models.LoanReply;
+import jmsmessenger.models.LoanRequest;
+
 import java.text.MessageFormat;
 
 public class ListViewLine {
 
-    private Message loanRequestMessage;
-    private Message loanReplyMessage;
-    private Message bankRequestMessage;
-    private Message bankReplyMessage;
+    private LoanRequest loanRequest;
+    private LoanReply loanReply;
+    private BankInterestRequest interestRequest;
+    private BankInterestReply interestReply;
 
-    public Message getLoanRequestMessage() {
-        return loanRequestMessage;
+    public LoanRequest getLoanRequest() {
+        return loanRequest;
     }
 
-    public void setLoanReplyMessage(Message loanReplyMessage) {
-        this.loanReplyMessage = loanReplyMessage;
+    public LoanReply getLoanReply() {
+        return loanReply;
     }
 
-    public void setBankReplyMessage(Message bankReplyMessage) {
-        this.bankReplyMessage = bankReplyMessage;
+    public void setLoanReply(LoanReply loanReply) {
+        this.loanReply = loanReply;
     }
 
-    public ListViewLine(Message loanRequestMessage, Message bankRequestMessage) {
-        this.loanRequestMessage = loanRequestMessage;
-        this.loanReplyMessage = null;
-        this.bankRequestMessage = bankRequestMessage;
-        this.bankReplyMessage = null;
+
+    public void setBankReply(BankInterestReply interestReply) {
+        this.interestReply = interestReply;
+    }
+
+    public ListViewLine(LoanRequest loanRequest, BankInterestRequest interestRequest) {
+        this.loanRequest = loanRequest;
+        this.loanReply = null;
+        this.interestRequest = interestRequest;
+        this.interestReply = null;
     }
 
     @Override
     public String toString() {
 
-        TextMessage textMessageLoanRequest = (TextMessage) this.loanRequestMessage;
-        TextMessage textMessageLoanResponse = null;
         String reply = "waiting...";
 
-        try {
-            if (loanReplyMessage != null) {
-                textMessageLoanResponse = (TextMessage) loanReplyMessage;
-                reply = textMessageLoanResponse.getText();
-            }
-            return MessageFormat.format("{0} ---> {1}", textMessageLoanRequest.getText(), reply);
-
-        } catch (JMSException e) {
-            e.printStackTrace();
+        if (loanReply != null) {
+            reply = loanReply.toString();
         }
+        return MessageFormat.format("{0} ---> {1}", loanRequest.toString(), reply);
 
-        return "";
     }
 }

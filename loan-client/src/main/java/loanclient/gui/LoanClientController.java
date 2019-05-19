@@ -1,45 +1,20 @@
 package loanclient.gui;
 
-import com.google.gson.Gson;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import loanclient.model.LoanReply;
-import loanclient.model.LoanRequest;
+import loanclient.gateway.ClientArgs;
+import loanclient.gateway.ClientGateway;
+import jmsmessenger.models.LoanRequest;
 
 import javax.jms.*;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.ResourceBundle;
+import java.util.*;
 
-public class LoanClientController implements Initializable {
+public class LoanClientController implements Initializable, Observer {
 
-    // Serializer
-    private Gson gson;
-
-    // Constants
-    public static final String LOAN_CLIENT_REQUEST_QUEUE = "LoanClientRequestQueue";
-    public static final String LOAN_CLIENT_RESPONSE_QUEUE = "LoanClientResponseQueue";
-
-    // JMS
-    private Connection connection;
-    private ConnectionFactory connectionFactory;
-    private Session session;
-
-    private Destination receiveDestination;
-    private MessageConsumer messageConsumer;
-
-    private Destination sendDestination;
-    private MessageProducer messageProducer;
-
-    private Properties props;
-    private Context jndiContext;
+    private ClientGateway gateway;
 
     // UI fields
     public TextField tfSsn;
@@ -47,62 +22,9 @@ public class LoanClientController implements Initializable {
     public TextField tfTime;
     public ListView<ListViewLine> lvLoanRequestReply;
 
-    // Map to store request messageId (correlationId for reply)
-    public Map<String, ListViewLine> lvlToMessageId;
-
     public LoanClientController() {
-
-        // init map
-        lvlToMessageId = new HashMap<>();
-
-        gson = new Gson();
-
-        props = new Properties();
-
-        props.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
-        props.setProperty(Context.PROVIDER_URL, "tcp://localhost:61616");
-
-        props.put(("queue." + LOAN_CLIENT_REQUEST_QUEUE), LOAN_CLIENT_REQUEST_QUEUE);
-        props.put(("queue." + LOAN_CLIENT_RESPONSE_QUEUE), LOAN_CLIENT_RESPONSE_QUEUE);
-
-        try {
-            jndiContext = new InitialContext(props);
-            connectionFactory = (ConnectionFactory) jndiContext.lookup("ConnectionFactory");
-            connection = connectionFactory.createConnection();
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-            receiveDestination = (Destination) jndiContext.lookup(LOAN_CLIENT_RESPONSE_QUEUE);
-            sendDestination = (Destination) jndiContext.lookup(LOAN_CLIENT_REQUEST_QUEUE);
-
-            messageConsumer = session.createConsumer(receiveDestination);
-            messageProducer = session.createProducer(sendDestination);
-
-            // listen to messages
-            messageConsumer.setMessageListener(new MessageListener() {
-                @Override
-                public void onMessage(Message message) {
-                    TextMessage textMessage = (TextMessage) message;
-
-                    try {
-                        ListViewLine listViewLine = (ListViewLine) lvlToMessageId.get(message.getJMSCorrelationID());
-                        if (listViewLine == null)
-                            return;
-
-                        LoanReply loanReply = gson.fromJson(textMessage.getText(), LoanReply.class);
-                        listViewLine.setLoanReply(loanReply);
-                        System.out.println("New message received: " + loanReply);
-                    } catch (JMSException e) {
-                        e.printStackTrace();
-                    }
-
-                    lvLoanRequestReply.refresh();
-                }
-            });
-
-            connection.start();
-        } catch (NamingException | JMSException e) {
-            e.printStackTrace();
-        }
+        gateway = new ClientGateway();
+        gateway.addObserver(this);
     }
 
     @FXML
@@ -116,13 +38,8 @@ public class LoanClientController implements Initializable {
         // create the ListView line with the request and add it to lvLoanRequestReply
         ListViewLine listViewLine = new ListViewLine(loanRequest);
         lvLoanRequestReply.getItems().add(listViewLine);
-
-        Message message = null;
         try {
-            message = session.createTextMessage(gson.toJson(loanRequest));
-            messageProducer.send(message);
-
-            lvlToMessageId.put(message.getJMSMessageID(), listViewLine);
+            gateway.sendLoanRequest(loanRequest);
         } catch (JMSException e) {
             e.printStackTrace();
         }
@@ -152,5 +69,14 @@ public class LoanClientController implements Initializable {
         tfSsn.setText("123456");
         tfAmount.setText("80000");
         tfTime.setText("30");
+    }
+
+    // listen to messages
+    @Override
+    public void update(Observable o, Object arg) {
+        ClientArgs clientArgs = (ClientArgs) arg;
+        ListViewLine lvl = getRequestReply(clientArgs.loanRequest);
+        lvl.setLoanReply(clientArgs.loanReply);
+        lvLoanRequestReply.refresh();
     }
 }

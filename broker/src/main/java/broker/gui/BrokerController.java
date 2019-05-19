@@ -1,172 +1,85 @@
 package broker.gui;
 
-import com.google.gson.Gson;
+import broker.gateways.BankArgs;
+import broker.gateways.BankGateway;
+import broker.gateways.ClientGateway;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
+import jmsmessenger.models.BankInterestRequest;
+import jmsmessenger.models.LoanReply;
+import jmsmessenger.models.LoanRequest;
 
-import javax.jms.*;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.jms.JMSException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.ResourceBundle;
+import java.util.*;
 
-public class BrokerController implements Initializable {
+public class BrokerController implements Initializable, Observer {
 
     public ListView<ListViewLine> lvBroker;
 
     // Map to store bank request messageId (correlationId for reply from bank)
-    public Map<String, ListViewLine> lvlToMessageId;
+    public Map<BankInterestRequest, ListViewLine> map;
 
-    // Serializer
-    private Gson gson;
-
-    // Constants
-    public static final String LOAN_CLIENT_REQUEST_QUEUE = "LoanClientRequestQueue";
-    public static final String LOAN_CLIENT_RESPONSE_QUEUE = "LoanClientResponseQueue";
-    public static final String BANK_CLIENT_REQUEST_QUEUE = "BankClientRequestQueue";
-    public static final String BANK_CLIENT_RESPONSE_QUEUE = "BankClientResponseQueue";
-
-    // JMS
-    private Connection connection;
-    private ConnectionFactory connectionFactory;
-    private Session session;
-
-    private Destination loanReceiveDestination;
-    ;
-    private MessageConsumer loanMessageConsumer;
-
-    private Destination bankReceiveDestination;
-    ;
-    private MessageConsumer bankMessageConsumer;
-
-    private Destination loanSendDestination;
-    private MessageProducer loanMessageProducer;
-
-    private Destination bankSendDestination;
-    private MessageProducer bankMessageProducer;
-
-    private Properties props;
-    private Context jndiContext;
+    // Gateways
+    private ClientGateway clientGateway;
+    private BankGateway bankGateway;
 
     public BrokerController() {
 
         // init map
-        lvlToMessageId = new HashMap<>();
+        map = new HashMap<>();
 
-        gson = new Gson();
+        // create and subscribe gateways
+        clientGateway = new ClientGateway();
+        clientGateway.addObserver(this);
 
-        props = new Properties();
-
-        props.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
-        props.setProperty(Context.PROVIDER_URL, "tcp://localhost:61616");
-
-        props.put(("queue." + LOAN_CLIENT_REQUEST_QUEUE), LOAN_CLIENT_REQUEST_QUEUE);
-        props.put(("queue." + LOAN_CLIENT_RESPONSE_QUEUE), LOAN_CLIENT_RESPONSE_QUEUE);
-        props.put(("queue." + BANK_CLIENT_REQUEST_QUEUE), BANK_CLIENT_REQUEST_QUEUE);
-        props.put(("queue." + BANK_CLIENT_RESPONSE_QUEUE), BANK_CLIENT_RESPONSE_QUEUE);
-
-        try {
-            jndiContext = new InitialContext(props);
-            connectionFactory = (ConnectionFactory) jndiContext.lookup("ConnectionFactory");
-            connection = connectionFactory.createConnection();
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-            loanReceiveDestination = (Destination) jndiContext.lookup(LOAN_CLIENT_REQUEST_QUEUE);
-            loanSendDestination = (Destination) jndiContext.lookup(LOAN_CLIENT_RESPONSE_QUEUE);
-
-            bankReceiveDestination = (Destination) jndiContext.lookup(BANK_CLIENT_RESPONSE_QUEUE);
-            bankSendDestination = (Destination) jndiContext.lookup(BANK_CLIENT_REQUEST_QUEUE);
-
-            loanMessageConsumer = session.createConsumer(loanReceiveDestination);
-            loanMessageProducer = session.createProducer(loanSendDestination);
-
-            bankMessageConsumer = session.createConsumer(bankReceiveDestination);
-            bankMessageProducer = session.createProducer(bankSendDestination);
-
-            // listen to messages
-            loanMessageConsumer.setMessageListener(new MessageListener() {
-                @Override
-                public void onMessage(Message message) {
-                    TextMessage textMessage = (TextMessage) message;
-                    try {
-                        System.out.println("loanMessageConsumer received: " + textMessage.getText());
-
-                        Message bankRequestMessage = null;
-                        try {
-                            bankRequestMessage = session.createTextMessage(textMessage.getText());
-                            bankMessageProducer.send(bankRequestMessage);
-
-                            ListViewLine listViewLine = new ListViewLine(message, bankRequestMessage);
-                            lvBroker.getItems().add(listViewLine);
-
-                            // map requesting messages by bankRequestMessageId
-                            lvlToMessageId.put(bankRequestMessage.getJMSMessageID(), listViewLine);
-
-                            // refresh UI
-                            lvBroker.refresh();
-
-                        } catch (JMSException e) {
-                            e.printStackTrace();
-                        }
-
-                    } catch (JMSException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            bankMessageConsumer.setMessageListener(new MessageListener() {
-                @Override
-                public void onMessage(Message message) {
-                    TextMessage textMessage = (TextMessage) message;
-                    try {
-                        System.out.println("bankMessageConsumer received: " + textMessage.getText());
-                        ListViewLine listViewLine = (ListViewLine) lvlToMessageId.get(message.getJMSCorrelationID());
-                        listViewLine.setBankReplyMessage(message);
-                        listViewLine.setLoanReplyMessage(
-                                sendReply(textMessage.getText(), listViewLine.getLoanRequestMessage()));
-
-                        lvBroker.refresh();
-                    } catch (JMSException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-
-            connection.start();
-        } catch (NamingException | JMSException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Message sendReply(String reply, Message requestMessage) {
-
-        Message msg = null;
-        try {
-            // create a text message
-            msg = session.createTextMessage(reply);
-
-            // set correlation id
-            msg.setJMSCorrelationID(requestMessage.getJMSMessageID());
-
-            loanMessageProducer.send(msg);
-
-            System.out.println("sent reply " + msg);
-
-            return msg;
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+        bankGateway = new BankGateway();
+        bankGateway.addObserver(this);
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        if (o == bankGateway) {
+//            System.out.println("bankGateway");
+            BankArgs args = (BankArgs) arg;
+            ListViewLine listViewLine = map.get(args.interestRequest);
+            listViewLine.setBankReply(args.interestReply);
+            listViewLine.setLoanReply(new LoanReply(args.interestReply.getInterest(), "ABN"));
+            lvBroker.refresh();
+            clientSend(listViewLine);
+
+        } else {
+//            System.out.println("clientGateway");
+            LoanRequest loanRequest = (LoanRequest) arg;
+            bankSend(loanRequest);
+        }
+    }
+
+    private void bankSend(LoanRequest loanRequest) {
+        BankInterestRequest interestRequest = new BankInterestRequest(loanRequest.getAmount(),
+                loanRequest.getTime());
+        ListViewLine listViewLine = new ListViewLine(loanRequest, interestRequest);
+        lvBroker.getItems().add(listViewLine);
+        map.put(interestRequest, listViewLine);
+        lvBroker.refresh();
+
+        try {
+            bankGateway.sendRequest(interestRequest);
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void clientSend(ListViewLine listViewLine) {
+        try {
+            clientGateway.sendReply(listViewLine.getLoanReply(), listViewLine.getLoanRequest());
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
     }
 }

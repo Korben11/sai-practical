@@ -1,8 +1,8 @@
 package bank.gui;
 
 
-import bank.model.BankInterestReply;
-import bank.model.BankInterestRequest;
+import jmsmessenger.models.BankInterestReply;
+import jmsmessenger.models.BankInterestRequest;
 
 /**
  * This class is an item/line for a ListView. It makes it possible to put both BankInterestRequest and BankInterestReply object in one item in a ListView.

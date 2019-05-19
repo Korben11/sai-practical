@@ -1,8 +1,8 @@
 package loanclient.gui;
 
 
-import loanclient.model.LoanReply;
-import loanclient.model.LoanRequest;
+import jmsmessenger.models.LoanReply;
+import jmsmessenger.models.LoanRequest;
 
 /**
  * This class is an item/line for a ListView. It makes it possible to put both BankInterestRequest and BankInterestReply object in one item in a ListView.
