@@ -4,10 +4,7 @@
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_10">
     <output-test url="file://$MODULE_DIR$/../../loan-client/out/test/classes" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../loan-client/src/test">
-      <sourceFolder url="file://$MODULE_DIR$/../../loan-client/src/test/java" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/../../loan-client/src/test/resources" type="java-test-resource" />
-    </content>
+    <content url="file://$MODULE_DIR$/../../loan-client/src/test" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="loan-client_main" />

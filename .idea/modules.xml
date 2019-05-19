@@ -5,9 +5,15 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/bank.iml" filepath="$PROJECT_DIR$/.idea/modules/bank.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/bank_main.iml" filepath="$PROJECT_DIR$/.idea/modules/bank_main.iml" group="bank" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/bank_test.iml" filepath="$PROJECT_DIR$/.idea/modules/bank_test.iml" group="bank" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/broker.iml" filepath="$PROJECT_DIR$/.idea/modules/broker.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/broker_main.iml" filepath="$PROJECT_DIR$/.idea/modules/broker_main.iml" group="broker" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/broker_test.iml" filepath="$PROJECT_DIR$/.idea/modules/broker_test.iml" group="broker" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/broker.loan-broker.broker.main.iml" filepath="$PROJECT_DIR$/.idea/modules/broker.loan-broker.broker.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/broker.loan-broker.broker.test.iml" filepath="$PROJECT_DIR$/.idea/modules/broker.loan-broker.broker.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-broker-bank_main.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-broker-bank_main.iml" group="bank" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-broker-bank_test.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-broker-bank_test.iml" group="bank" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-broker-loan-client_main.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-broker-loan-client_main.iml" group="loan-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-broker-loan-client_test.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-broker-loan-client_test.iml" group="loan-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-broker.broker.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-broker.broker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-broker.broker.main.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-broker.broker.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-broker.broker.test.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-broker.broker.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-client.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-client_main.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-client_main.iml" group="loan-client" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/loan-client_test.iml" filepath="$PROJECT_DIR$/.idea/modules/loan-client_test.iml" group="loan-client" />

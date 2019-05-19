@@ -4,8 +4,14 @@
     <bytecodeTargetLevel>
       <module name="bank_main" target="1.10" />
       <module name="bank_test" target="1.10" />
-      <module name="broker_main" target="1.10" />
-      <module name="broker_test" target="1.10" />
+      <module name="broker.loan-broker.broker.main" target="1.10" />
+      <module name="broker.loan-broker.broker.test" target="1.10" />
+      <module name="loan-broker-bank_main" target="1.10" />
+      <module name="loan-broker-bank_test" target="1.10" />
+      <module name="loan-broker-loan-client_main" target="1.10" />
+      <module name="loan-broker-loan-client_test" target="1.10" />
+      <module name="loan-broker.broker.main" target="1.10" />
+      <module name="loan-broker.broker.test" target="1.10" />
       <module name="loan-client_main" target="1.10" />
       <module name="loan-client_test" target="1.10" />
     </bytecodeTargetLevel>
