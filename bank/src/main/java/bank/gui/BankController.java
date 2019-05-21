@@ -26,6 +26,12 @@ public class BankController implements Initializable, Observer {
 
     public BankController() {
         gateway = new BankGateway();
+//        gateway = new BankGateway() {
+//            @Override
+//            public void requestArrived(BankInterestRequest request) {
+//
+//            }
+//        };
         gateway.addObserver(this);
     }
 
