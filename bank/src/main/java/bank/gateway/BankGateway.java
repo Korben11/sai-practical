@@ -17,7 +17,6 @@ import javax.jms.TextMessage;
 import static jmsmessenger.Constants.BANK_CLIENT_REQUEST_QUEUE;
 import static jmsmessenger.Constants.BANK_CLIENT_RESPONSE_QUEUE;
 
-//public abstract class BankGateway extends Observable {
 public class BankGateway extends Observable {
     private MessageSender messageSender;
     private MessageReceiver messageReceiver;
@@ -37,7 +36,6 @@ public class BankGateway extends Observable {
                 BankInterestRequest request = serializer.deserializeBankInterestRequest(msg.getText());
                 map.put(request, message.getJMSMessageID());
                 notify(request);
-//                requestArrived(request);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
@@ -56,6 +54,4 @@ public class BankGateway extends Observable {
         setChanged();
         notifyObservers(request);
     }
-
-//    public abstract void requestArrived(BankInterestRequest request);
 }
