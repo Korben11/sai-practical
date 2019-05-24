@@ -1,8 +1,10 @@
 package broker.gateways;
 
+import broker.routers.ArchiveRouter;
 import jmsmessenger.MessageReceiver;
 import jmsmessenger.MessageSender;
 import jmsmessenger.models.BankInterestReply;
+import jmsmessenger.models.LoanArchive;
 import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 import jmsmessenger.serializers.LoanSerializer;
@@ -24,10 +26,13 @@ public class ClientGateway extends Observable {
     private MessageReceiver messageReceiver;
     private Map<LoanRequest, Message> map;
     private LoanSerializer loanSerializer;
+    private ArchiveRouter archiveRouter;
 
     public ClientGateway() {
         messageSender = new MessageSender(LOAN_CLIENT_RESPONSE_QUEUE);
         messageReceiver = new MessageReceiver(LOAN_CLIENT_REQUEST_QUEUE);
+
+        archiveRouter = new ArchiveRouter("http://localhost:8080/archive/rest/accepted");
 
         loanSerializer = new LoanSerializer();
         map = new HashMap<>();
@@ -49,6 +54,10 @@ public class ClientGateway extends Observable {
         String json = loanSerializer.serializeLoanReply(loanReply);
         Message replyMsg = messageSender.createMessage(json);
         replyMsg.setJMSCorrelationID(message.getJMSMessageID());
+
+        // content based router
+        LoanArchive loanArchive = new LoanArchive(loanRequest.getSsn(), loanRequest.getAmount(), loanReply.getBankId(), loanReply.getInterest());
+        archiveRouter.archive(loanArchive);
 
         messageSender.send(replyMsg);
     }
