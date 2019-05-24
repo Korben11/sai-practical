@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 
+import broker.enrichers.CreditHistoryEnricher;
 import jmsmessenger.MessageReceiver;
 import jmsmessenger.MessageSender;
 import jmsmessenger.models.BankInterestReply;
 import jmsmessenger.models.BankInterestRequest;
+import jmsmessenger.models.CreditHistory;
 import jmsmessenger.serializers.InterestSerializer;
 
 import javax.jms.JMSException;
@@ -23,10 +25,13 @@ public class BankGateway extends Observable {
     private MessageSender messageSender;
     private Map<String, BankInterestRequest> map;
     private InterestSerializer interestSerializer;
+    private CreditHistoryEnricher creditHistoryEnricher;
 
     public BankGateway() {
         messageReceiver = new MessageReceiver(BANK_CLIENT_RESPONSE_QUEUE);
         messageSender = new MessageSender(BANK_CLIENT_REQUEST_QUEUE);
+
+        creditHistoryEnricher = new CreditHistoryEnricher("http://localhost:8080/credit/rest/history/");
 
         interestSerializer = new InterestSerializer();
         map = new HashMap<>();
@@ -43,9 +48,17 @@ public class BankGateway extends Observable {
         });
     }
 
-    public void sendRequest(BankInterestRequest interestRequest) throws JMSException {
+    public void sendRequest(BankInterestRequest interestRequest, int ssn) throws JMSException {
+        // content enricher
+        CreditHistory creditHistory = creditHistoryEnricher.getCreditHistory(ssn);
+        if (creditHistory != null){
+            interestRequest.setCreditScore(creditHistory.getCredit());
+            interestRequest.setHistory(creditHistory.getHistory());
+        }
+
         String json = interestSerializer.serializeBankInterestRequest(interestRequest);
         Message message = messageSender.createMessage(json);
+
         messageSender.send(message);
 
         map.put(message.getJMSMessageID(), interestRequest);

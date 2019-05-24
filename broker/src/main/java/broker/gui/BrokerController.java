@@ -69,7 +69,7 @@ public class BrokerController implements Initializable, Observer {
         lvBroker.refresh();
 
         try {
-            bankGateway.sendRequest(interestRequest);
+            bankGateway.sendRequest(interestRequest, loanRequest.getSsn());
         } catch (JMSException e) {
             e.printStackTrace();
         }

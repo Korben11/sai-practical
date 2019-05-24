@@ -1,9 +1,5 @@
 package jmsmessenger.models;
 
-import com.google.gson.annotations.Expose;
-
-import javax.jms.Message;
-
 /**
  *
  * This class stores all information about an request from a bank to offer
@@ -13,28 +9,23 @@ public class BankInterestRequest {
 
     private int amount; // the ammount to borrow
     private int time; // the time-span of the loan in years
-
-    public Message getMessage() {
-        return message;
-    }
-
-    public void setMessage(Message message) {
-        this.message = message;
-    }
-
-    @Expose(serialize = false, deserialize = false)
-    private Message message;
+    private int creditScore;
+    private int history;
 
     public BankInterestRequest() {
         super();
         this.amount = 0;
         this.time = 0;
+        this.creditScore = 0;
+        this.history = 0;
     }
 
     public BankInterestRequest(int amount, int time) {
         super();
         this.amount = amount;
         this.time = time;
+        this.creditScore = 0;
+        this.history = 0;
     }
 
     public int getAmount() {
@@ -53,8 +44,24 @@ public class BankInterestRequest {
         this.time = time;
     }
 
+    public int getCreditScore() {
+        return creditScore;
+    }
+
+    public void setCreditScore(int creditScore) {
+        this.creditScore = creditScore;
+    }
+
+    public int getHistory() {
+        return history;
+    }
+
+    public void setHistory(int history) {
+        this.history = history;
+    }
+
     @Override
     public String toString() {
-        return " amount=" + amount + " time=" + time;
+        return " amount=" + amount + " time=" + time + " creditScore=" + creditScore + " history=" + history;
     }
 }
