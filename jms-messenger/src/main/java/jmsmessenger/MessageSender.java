@@ -1,7 +1,5 @@
 package jmsmessenger;
 
-import jmsmessenger.Constants;
-
 import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -64,12 +62,15 @@ public class MessageSender {
     }
 
     public void send(Message message) throws JMSException {
-
         producer.send(message);
     }
 
     public void send(Message message, String queue) throws JMSException {
 
         producer.send(session.createQueue(queue), message);
+    }
+
+    public void send(Message message, Destination queue) throws JMSException {
+        producer.send(queue, message);
     }
 }

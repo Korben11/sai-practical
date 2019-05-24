@@ -12,7 +12,12 @@ import javax.jms.*;
 import java.net.URL;
 import java.util.*;
 
+import static jmsmessenger.Constants.LOAN_CLIENT_REQUEST_QUEUE;
+import static jmsmessenger.Constants.LOAN_CLIENT_RESPONSE_QUEUE;
+
 public class LoanClientController implements Initializable, Observer {
+
+    private static String CLIENT_ID;
 
     private ClientGateway gateway;
 
@@ -23,7 +28,11 @@ public class LoanClientController implements Initializable, Observer {
     public ListView<ListViewLine> lvLoanRequestReply;
 
     public LoanClientController() {
-        gateway = new ClientGateway();
+    }
+
+    public void initGateway(String name){
+        CLIENT_ID = name;
+        gateway = new ClientGateway(LOAN_CLIENT_REQUEST_QUEUE, LOAN_CLIENT_RESPONSE_QUEUE + CLIENT_ID);
         gateway.addObserver(this);
     }
 

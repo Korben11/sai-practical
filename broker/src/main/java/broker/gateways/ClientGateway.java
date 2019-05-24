@@ -3,15 +3,12 @@ package broker.gateways;
 import broker.routers.ArchiveRouter;
 import jmsmessenger.MessageReceiver;
 import jmsmessenger.MessageSender;
-import jmsmessenger.models.BankInterestReply;
 import jmsmessenger.models.LoanArchive;
 import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 import jmsmessenger.serializers.LoanSerializer;
-import jmsmessenger.serializers.InterestSerializer;
 
 import static jmsmessenger.Constants.LOAN_CLIENT_REQUEST_QUEUE;
-import static jmsmessenger.Constants.LOAN_CLIENT_RESPONSE_QUEUE;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -29,7 +26,7 @@ public class ClientGateway extends Observable {
     private ArchiveRouter archiveRouter;
 
     public ClientGateway() {
-        messageSender = new MessageSender(LOAN_CLIENT_RESPONSE_QUEUE);
+        messageSender = new MessageSender();
         messageReceiver = new MessageReceiver(LOAN_CLIENT_REQUEST_QUEUE);
 
         archiveRouter = new ArchiveRouter("http://localhost:8080/archive/rest/accepted");
@@ -51,6 +48,8 @@ public class ClientGateway extends Observable {
 
     public void sendReply(LoanReply loanReply, LoanRequest loanRequest) throws JMSException {
         Message message = map.get(loanRequest);
+        System.out.println("got here");
+        System.out.println(message.getJMSReplyTo());
         String json = loanSerializer.serializeLoanReply(loanReply);
         Message replyMsg = messageSender.createMessage(json);
         replyMsg.setJMSCorrelationID(message.getJMSMessageID());
@@ -59,7 +58,7 @@ public class ClientGateway extends Observable {
         LoanArchive loanArchive = new LoanArchive(loanRequest.getSsn(), loanRequest.getAmount(), loanReply.getBankId(), loanReply.getInterest());
         archiveRouter.archive(loanArchive);
 
-        messageSender.send(replyMsg);
+        messageSender.send(replyMsg, message.getJMSReplyTo());
     }
 
     private void notify(LoanRequest request) {

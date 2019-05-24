@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 
-import static jmsmessenger.Constants.LOAN_CLIENT_REQUEST_QUEUE;
-import static jmsmessenger.Constants.LOAN_CLIENT_RESPONSE_QUEUE;
 
 public class ClientGateway extends Observable {
     private MessageSender messageSender;
@@ -22,9 +20,9 @@ public class ClientGateway extends Observable {
     private Map<String, LoanRequest> map;
     private LoanSerializer serializer;
 
-    public ClientGateway() {
-        messageSender = new MessageSender(LOAN_CLIENT_REQUEST_QUEUE);
-        messageReceiver = new MessageReceiver(LOAN_CLIENT_RESPONSE_QUEUE);
+    public ClientGateway(String requestQueue, String responseQueue) {
+        messageSender = new MessageSender(requestQueue);
+        messageReceiver = new MessageReceiver(responseQueue);
         serializer = new LoanSerializer();
 
         map = new HashMap<>();
@@ -44,6 +42,7 @@ public class ClientGateway extends Observable {
     public void sendLoanRequest(LoanRequest loanRequest) throws JMSException {
         String json = serializer.serializeLoanRequest(loanRequest);
         Message message = messageSender.createMessage(json);
+        message.setJMSReplyTo(messageReceiver.getDestination());
         messageSender.send(message);
         map.put(message.getJMSMessageID(), loanRequest);
     }

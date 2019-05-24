@@ -15,12 +15,21 @@ public class MessageReceiver {
     // connection objects
     private Connection connection;
     private Session session;
+
+    public Destination getDestination() {
+        return destination;
+    }
+
     private Destination destination;
     private MessageConsumer consumer;
 
     public MessageReceiver(String queue) {
         this.queue = queue;
 
+        this.init();
+    }
+
+    private void init() {
         Properties properties = new Properties();
         properties.setProperty(Context.INITIAL_CONTEXT_FACTORY,
                 Constants.ORG_APACHE_ACTIVEMQ_JNDI_ACTIVE_MQINITIAL_CONTEXT_FACTORY);
@@ -33,7 +42,6 @@ public class MessageReceiver {
             ConnectionFactory connectionFactory = (ConnectionFactory) jndiContext.lookup(Constants.CONNECTION_FACTORY);
             connection = connectionFactory.createConnection();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
 
             // add client destination and consumer
             destination = (Destination) jndiContext.lookup(queue);
