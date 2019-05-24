@@ -6,10 +6,18 @@ public final class Constants {
     public static final String QUEUE = "queue.";
     public static final String CONNECTION_FACTORY = "ConnectionFactory";
 
+    // Banks
+    public static enum BANK {
+        ABN,
+        ING,
+        RABO,
+    }
+
     public static final String LOAN_CLIENT_REQUEST_QUEUE = "LoanClientRequestQueue";
     public static final String LOAN_CLIENT_RESPONSE_QUEUE = "LoanClientResponseQueue";
     public static final String BANK_CLIENT_REQUEST_QUEUE = "BankClientRequestQueue";
     public static final String BANK_CLIENT_RESPONSE_QUEUE = "BankClientResponseQueue";
+
 
     private Constants(){}
 }

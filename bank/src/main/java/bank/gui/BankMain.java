@@ -11,11 +11,18 @@ import javafx.stage.WindowEvent;
 
 public class BankMain extends Application {
 
+    private static String name;
+
     @Override
     public void start(Stage primaryStage) throws Exception{
         // load FXML file is in bank/src/main/resources/bank.fxml
-        Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("bank.fxml"));
-        primaryStage.setTitle("BANK - ABN Amro");
+        FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("bank.fxml"));
+        Parent root = loader.load();
+        BankController bankController = loader.getController();
+
+        bankController.initGateway(name);
+
+        primaryStage.setTitle("BANK - " + name);
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
@@ -30,6 +37,7 @@ public class BankMain extends Application {
 
 
     public static void main(String[] args) {
+        name = args[0];
         launch(args);
     }
 }

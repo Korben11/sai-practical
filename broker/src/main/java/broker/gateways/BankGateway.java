@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Observable;
 
 import broker.enrichers.CreditHistoryEnricher;
+import jmsmessenger.Constants;
 import jmsmessenger.MessageReceiver;
 import jmsmessenger.MessageSender;
 import jmsmessenger.models.BankInterestReply;
@@ -17,7 +18,6 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 
 import static jmsmessenger.Constants.BANK_CLIENT_RESPONSE_QUEUE;
-import static jmsmessenger.Constants.BANK_CLIENT_REQUEST_QUEUE;
 
 
 public class BankGateway extends Observable {
@@ -29,7 +29,7 @@ public class BankGateway extends Observable {
 
     public BankGateway() {
         messageReceiver = new MessageReceiver(BANK_CLIENT_RESPONSE_QUEUE);
-        messageSender = new MessageSender(BANK_CLIENT_REQUEST_QUEUE);
+        messageSender = new MessageSender();
 
         creditHistoryEnricher = new CreditHistoryEnricher("http://localhost:8080/credit/rest/history/");
 
@@ -57,11 +57,14 @@ public class BankGateway extends Observable {
         }
 
         String json = interestSerializer.serializeBankInterestRequest(interestRequest);
-        Message message = messageSender.createMessage(json);
+        for (Constants.BANK bank: Constants.BANK.values()) {
+            Message message = messageSender.createMessage(json);
 
-        messageSender.send(message);
+            String queue = bank + Constants.BANK_CLIENT_REQUEST_QUEUE;
+            messageSender.send(message, queue);
+            map.put(message.getJMSMessageID(), interestRequest);
+        }
 
-        map.put(message.getJMSMessageID(), interestRequest);
     }
 
     private void notify(BankInterestRequest interestRequest, BankInterestReply interestReply) {

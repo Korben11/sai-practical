@@ -45,16 +45,14 @@ public class BrokerController implements Initializable, Observer {
     @Override
     public void update(Observable o, Object arg) {
         if (o == bankGateway) {
-//            System.out.println("bankGateway");
             BankArgs args = (BankArgs) arg;
             ListViewLine listViewLine = map.get(args.interestRequest);
             listViewLine.setBankReply(args.interestReply);
-            listViewLine.setLoanReply(new LoanReply(args.interestReply.getInterest(), "ABN"));
+            listViewLine.setLoanReply(new LoanReply(args.interestReply.getInterest(), args.interestReply.getBankId()));
             lvBroker.refresh();
             clientSend(listViewLine);
 
         } else {
-//            System.out.println("clientGateway");
             LoanRequest loanRequest = (LoanRequest) arg;
             bankSend(loanRequest);
         }

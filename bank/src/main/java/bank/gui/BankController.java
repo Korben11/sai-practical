@@ -14,18 +14,24 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.ResourceBundle;
 
+import static jmsmessenger.Constants.BANK_CLIENT_REQUEST_QUEUE;
+import static jmsmessenger.Constants.BANK_CLIENT_RESPONSE_QUEUE;
+
 public class BankController implements Initializable, Observer {
 
     private BankGateway gateway;
 
-    private final String BANK_ID = "ABN";
+    private static String BANK_ID;
 
     // UI fields
     public ListView<ListViewLine> lvBankRequestReply;
     public TextField tfInterest;
 
-    public BankController() {
-        gateway = new BankGateway();
+    public BankController() { }
+
+    public void initGateway(String bank) {
+        BANK_ID = bank;
+        gateway = new BankGateway(BANK_ID + BANK_CLIENT_REQUEST_QUEUE, BANK_CLIENT_RESPONSE_QUEUE);
         gateway.addObserver(this);
     }
 
