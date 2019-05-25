@@ -20,5 +20,6 @@ dependencies {
     compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.27'
     compile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.27'
     compile group: 'org.glassfish.jersey.bundles.repackaged', name: 'jersey-guava', version: '2.26-b03'
+    compile group: 'net.sourceforge.jeval', name: 'jeval', version: '0.9.4'
 //    implementation project(':jms-messenger')
 }

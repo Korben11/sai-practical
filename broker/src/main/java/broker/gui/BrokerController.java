@@ -1,17 +1,22 @@
 package broker.gui;
 
+import broker.enrichers.CreditHistoryEnricher;
 import broker.gateways.BankArgs;
 import broker.gateways.BankGateway;
 import broker.gateways.ClientGateway;
+import broker.recipient.BankList;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import jmsmessenger.models.BankInterestRequest;
+import jmsmessenger.models.CreditHistory;
 import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 
 import javax.jms.JMSException;
 import java.net.URL;
 import java.util.*;
+
+import static jmsmessenger.Constants.HTTP_LOCALHOST_8080_CREDIT_REST_HISTORY;
 
 public class BrokerController implements Initializable, Observer {
 
@@ -23,11 +28,17 @@ public class BrokerController implements Initializable, Observer {
     // Gateways
     private ClientGateway clientGateway;
     private BankGateway bankGateway;
+    private CreditHistoryEnricher creditHistoryEnricher;
+
+    // recipient list
+    private BankList bankList;
 
     public BrokerController() {
 
         // init map
         map = new HashMap<>();
+
+        creditHistoryEnricher = new CreditHistoryEnricher(HTTP_LOCALHOST_8080_CREDIT_REST_HISTORY);
 
         // create and subscribe gateways
         clientGateway = new ClientGateway();
@@ -35,6 +46,9 @@ public class BrokerController implements Initializable, Observer {
 
         bankGateway = new BankGateway();
         bankGateway.addObserver(this);
+
+        // init recipient list
+        bankList = new BankList(bankGateway);
     }
 
     @Override
@@ -61,16 +75,21 @@ public class BrokerController implements Initializable, Observer {
     private void bankSend(LoanRequest loanRequest) {
         BankInterestRequest interestRequest = new BankInterestRequest(loanRequest.getAmount(),
                 loanRequest.getTime());
+
+        // content enricher
+        CreditHistory creditHistory = creditHistoryEnricher.getCreditHistory(loanRequest.getSsn());
+        if (creditHistory != null) {
+            interestRequest.setHistory(creditHistory.getHistory());
+            interestRequest.setCreditScore(creditHistory.getCredit());
+        }
+
         ListViewLine listViewLine = new ListViewLine(loanRequest, interestRequest);
         lvBroker.getItems().add(listViewLine);
         map.put(interestRequest, listViewLine);
         lvBroker.refresh();
 
-        try {
-            bankGateway.sendRequest(interestRequest, loanRequest.getSsn());
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
+        int passed = bankList.sendRequest(interestRequest);
+        System.out.println("interest request send was passed: " + passed + " times");
     }
 
     private void clientSend(ListViewLine listViewLine) {

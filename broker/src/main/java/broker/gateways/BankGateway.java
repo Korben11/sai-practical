@@ -25,13 +25,10 @@ public class BankGateway extends Observable {
     private MessageSender messageSender;
     private Map<String, BankInterestRequest> map;
     private InterestSerializer interestSerializer;
-    private CreditHistoryEnricher creditHistoryEnricher;
 
     public BankGateway() {
         messageReceiver = new MessageReceiver(BANK_CLIENT_RESPONSE_QUEUE);
         messageSender = new MessageSender();
-
-        creditHistoryEnricher = new CreditHistoryEnricher("http://localhost:8080/credit/rest/history/");
 
         interestSerializer = new InterestSerializer();
         map = new HashMap<>();
@@ -48,23 +45,12 @@ public class BankGateway extends Observable {
         });
     }
 
-    public void sendRequest(BankInterestRequest interestRequest, int ssn) throws JMSException {
-        // content enricher
-        CreditHistory creditHistory = creditHistoryEnricher.getCreditHistory(ssn);
-        if (creditHistory != null){
-            interestRequest.setCreditScore(creditHistory.getCredit());
-            interestRequest.setHistory(creditHistory.getHistory());
-        }
-
+    public void sendRequest(BankInterestRequest interestRequest, String queue) throws JMSException {
         String json = interestSerializer.serializeBankInterestRequest(interestRequest);
-        for (Constants.BANK bank: Constants.BANK.values()) {
-            Message message = messageSender.createMessage(json);
+        Message message = messageSender.createMessage(json);
+        messageSender.send(message, queue);
 
-            String queue = bank + Constants.BANK_CLIENT_REQUEST_QUEUE;
-            messageSender.send(message, queue);
-            map.put(message.getJMSMessageID(), interestRequest);
-        }
-
+        map.put(message.getJMSMessageID(), interestRequest);
     }
 
     private void notify(BankInterestRequest interestRequest, BankInterestReply interestReply) {

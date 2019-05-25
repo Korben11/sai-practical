@@ -8,6 +8,7 @@ import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 import jmsmessenger.serializers.LoanSerializer;
 
+import static jmsmessenger.Constants.HTTP_LOCALHOST_8080_ARCHIVE_REST_ACCEPTED;
 import static jmsmessenger.Constants.LOAN_CLIENT_REQUEST_QUEUE;
 
 import javax.jms.JMSException;
@@ -18,7 +19,6 @@ import java.util.Map;
 import java.util.Observable;
 
 public class ClientGateway extends Observable {
-
     private MessageSender messageSender;
     private MessageReceiver messageReceiver;
     private Map<LoanRequest, Message> map;
@@ -29,7 +29,7 @@ public class ClientGateway extends Observable {
         messageSender = new MessageSender();
         messageReceiver = new MessageReceiver(LOAN_CLIENT_REQUEST_QUEUE);
 
-        archiveRouter = new ArchiveRouter("http://localhost:8080/archive/rest/accepted");
+        archiveRouter = new ArchiveRouter(HTTP_LOCALHOST_8080_ARCHIVE_REST_ACCEPTED);
 
         loanSerializer = new LoanSerializer();
         map = new HashMap<>();
@@ -48,8 +48,6 @@ public class ClientGateway extends Observable {
 
     public void sendReply(LoanReply loanReply, LoanRequest loanRequest) throws JMSException {
         Message message = map.get(loanRequest);
-        System.out.println("got here");
-        System.out.println(message.getJMSReplyTo());
         String json = loanSerializer.serializeLoanReply(loanReply);
         Message replyMsg = messageSender.createMessage(json);
         replyMsg.setJMSCorrelationID(message.getJMSMessageID());
