@@ -11,13 +11,12 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Observable;
 
 import static jmsmessenger.Constants.BANK_CLIENT_RESPONSE_QUEUE;
 import static jmsmessenger.Constants.AGGREGATION_ID;
 
 
-public class BankGateway extends Observable {
+public abstract class BankGateway {
     private MessageReceiver messageReceiver;
     private MessageSender messageSender;
     private Map<String, BankInterestRequest> map;
@@ -35,7 +34,7 @@ public class BankGateway extends Observable {
             try {
                 BankInterestReply interestReply = interestSerializer.deserializeBankInterestReply(msg.getText());
                 BankInterestRequest interestRequest = map.get(message.getJMSCorrelationID());
-                notify(interestRequest, interestReply, message.getIntProperty(AGGREGATION_ID));
+                onBankInterestArrived(interestRequest, interestReply, message.getIntProperty(AGGREGATION_ID));
             } catch (JMSException e) {
                 e.printStackTrace();
             }
@@ -51,9 +50,5 @@ public class BankGateway extends Observable {
         map.put(message.getJMSMessageID(), interestRequest);
     }
 
-    private void notify(BankInterestRequest interestRequest, BankInterestReply interestReply, Integer aggregationId) {
-        BankArgs args = new BankArgs(interestRequest, interestReply, aggregationId);
-        setChanged();
-        notifyObservers(args);
-    }
+    public abstract void onBankInterestArrived(BankInterestRequest interestRequest, BankInterestReply interestReply, Integer aggregationId);
 }

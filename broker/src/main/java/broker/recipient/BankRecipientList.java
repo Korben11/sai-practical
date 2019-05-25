@@ -10,7 +10,7 @@ import javax.jms.JMSException;
 
 import static jmsmessenger.Constants.*;
 
-public class BankList {
+public class BankRecipientList {
 
     private BankRule banksRules[] = {
             new BankRule(Constants.BANK.ING, AMOUNT_LTE_100000_AND_TIME_LTE_10),
@@ -20,7 +20,7 @@ public class BankList {
     private BankGateway bankGateway;
     private Evaluator evaluator;
 
-    public BankList(BankGateway bankGateway) {
+    public BankRecipientList(BankGateway bankGateway) {
         this.bankGateway = bankGateway;
         evaluator = new Evaluator();
     }
