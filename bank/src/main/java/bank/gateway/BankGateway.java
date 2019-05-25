@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 
-import jmsmessenger.Constants;
+import static jmsmessenger.Constants.AGGREGATION_ID;
 import jmsmessenger.models.BankInterestReply;
 import jmsmessenger.models.BankInterestRequest;
 import jmsmessenger.serializers.InterestSerializer;
@@ -18,7 +18,7 @@ import javax.jms.TextMessage;
 public class BankGateway extends Observable {
     private MessageSender messageSender;
     private MessageReceiver messageReceiver;
-    private Map<BankInterestRequest, String> map;
+    private Map<BankInterestRequest, Message> map;
     private InterestSerializer serializer;
 
     public BankGateway(String requestQueue, String responseQueue) {
@@ -32,7 +32,7 @@ public class BankGateway extends Observable {
             TextMessage msg = (TextMessage) message;
             try {
                 BankInterestRequest request = serializer.deserializeBankInterestRequest(msg.getText());
-                map.put(request, message.getJMSMessageID());
+                map.put(request, message);
                 notify(request);
             } catch (JMSException e) {
                 e.printStackTrace();
@@ -41,10 +41,11 @@ public class BankGateway extends Observable {
     }
 
     public void sendInterestReply(BankInterestRequest request, BankInterestReply reply) throws JMSException {
-        String correlationId = map.get(request);
+        Message reqMsg = map.get(request);
         String json = serializer.serializeBankInterestReply(reply);
         Message message = messageSender.createMessage(json);
-        message.setJMSCorrelationID(correlationId);
+        message.setJMSCorrelationID(reqMsg.getJMSMessageID());
+        message.setIntProperty(AGGREGATION_ID, reqMsg.getIntProperty(AGGREGATION_ID));
         messageSender.send(message);
     }
 

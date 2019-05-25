@@ -9,7 +9,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 public class ArchiveRouter {
@@ -23,12 +22,12 @@ public class ArchiveRouter {
     }
 
     public void archive(LoanArchive loanArchive) {
-        if (loanArchive.getInterest() == 0) { return;}
+        if (loanArchive.getInterest() == 0) {
+            return;
+        }
 
-        Response response = this.client.request(MediaType.APPLICATION_JSON).post(
+        this.client.request(MediaType.APPLICATION_JSON).post(
                 Entity.entity(serializer.serializeLoanArchive(loanArchive), MediaType.APPLICATION_JSON)
         );
-
-        System.out.println(response.getStatus());
     }
 }

@@ -25,7 +25,7 @@ public class BankList {
         evaluator = new Evaluator();
     }
 
-    public int sendRequest(BankInterestRequest request) {
+    public int sendRequest(BankInterestRequest request, Integer aggregationId) {
         int passed = 0;
 
         setEvaluator(request.getAmount(), request.getTime());
@@ -35,7 +35,7 @@ public class BankList {
                 if (!(evaluator.evaluate(bankRule.getRule()).equals("1.0")))
                     continue;
                 passed++;
-                bankGateway.sendRequest(request, bankRule.getBank() + Constants.BANK_CLIENT_REQUEST_QUEUE);
+                bankGateway.sendRequest(request, bankRule.getBank() + Constants.BANK_CLIENT_REQUEST_QUEUE, aggregationId);
             }
         } catch (EvaluationException e) {
             e.printStackTrace();

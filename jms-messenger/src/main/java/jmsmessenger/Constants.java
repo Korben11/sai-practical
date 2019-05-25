@@ -30,6 +30,7 @@ public final class Constants {
     public static final String BANK_CLIENT_REQUEST_QUEUE = "BankClientRequestQueue";
     public static final String BANK_CLIENT_RESPONSE_QUEUE = "BankClientResponseQueue";
 
+    public static final String AGGREGATION_ID = "aggregationId";
 
     private Constants(){}
 }

@@ -1,16 +1,14 @@
 package broker.gui;
 
 import broker.enrichers.CreditHistoryEnricher;
+import broker.gateways.Aggregator;
 import broker.gateways.BankArgs;
 import broker.gateways.BankGateway;
 import broker.gateways.ClientGateway;
 import broker.recipient.BankList;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
-import jmsmessenger.models.BankInterestRequest;
-import jmsmessenger.models.CreditHistory;
-import jmsmessenger.models.LoanReply;
-import jmsmessenger.models.LoanRequest;
+import jmsmessenger.models.*;
 
 import javax.jms.JMSException;
 import java.net.URL;
@@ -24,6 +22,8 @@ public class BrokerController implements Initializable, Observer {
 
     // Map to store bank request messageId (correlationId for reply from bank)
     public Map<BankInterestRequest, ListViewLine> map;
+    // Map aggregationId to interest request
+    private Map<Integer, BankInterestRequest> mapBankInterestRequest;
 
     // Gateways
     private ClientGateway clientGateway;
@@ -33,10 +33,15 @@ public class BrokerController implements Initializable, Observer {
     // recipient list
     private BankList bankList;
 
+    // Aggregator
+    private static int aggregationId = 0;
+    private Aggregator aggregator;
+
     public BrokerController() {
 
         // init map
         map = new HashMap<>();
+        mapBankInterestRequest = new HashMap<>();
 
         creditHistoryEnricher = new CreditHistoryEnricher(HTTP_LOCALHOST_8080_CREDIT_REST_HISTORY);
 
@@ -49,6 +54,19 @@ public class BrokerController implements Initializable, Observer {
 
         // init recipient list
         bankList = new BankList(bankGateway);
+
+        aggregator = new Aggregator() {
+            @Override
+            public void onAllRepliesReceived(BankInterestReply interestReply, Integer aggregationId) {
+                BankInterestRequest interestRequest = mapBankInterestRequest.get(aggregationId);
+                ListViewLine listViewLine = map.get(interestRequest);
+                listViewLine.setBankReply(interestReply);
+                listViewLine.setLoanReply(new LoanReply(interestReply.getInterest(), interestReply.getBankId()));
+                lvBroker.refresh();
+                clientSend(listViewLine);
+            }
+        };
+
     }
 
     @Override
@@ -60,12 +78,7 @@ public class BrokerController implements Initializable, Observer {
     public void update(Observable o, Object arg) {
         if (o == bankGateway) {
             BankArgs args = (BankArgs) arg;
-            ListViewLine listViewLine = map.get(args.interestRequest);
-            listViewLine.setBankReply(args.interestReply);
-            listViewLine.setLoanReply(new LoanReply(args.interestReply.getInterest(), args.interestReply.getBankId()));
-            lvBroker.refresh();
-            clientSend(listViewLine);
-
+            aggregator.addBankInterestReply(args.interestReply, args.aggregationId);
         } else {
             LoanRequest loanRequest = (LoanRequest) arg;
             bankSend(loanRequest);
@@ -73,6 +86,8 @@ public class BrokerController implements Initializable, Observer {
     }
 
     private void bankSend(LoanRequest loanRequest) {
+        aggregationId++;
+
         BankInterestRequest interestRequest = new BankInterestRequest(loanRequest.getAmount(),
                 loanRequest.getTime());
 
@@ -86,10 +101,17 @@ public class BrokerController implements Initializable, Observer {
         ListViewLine listViewLine = new ListViewLine(loanRequest, interestRequest);
         lvBroker.getItems().add(listViewLine);
         map.put(interestRequest, listViewLine);
+        mapBankInterestRequest.put(aggregationId, interestRequest);
         lvBroker.refresh();
 
-        int passed = bankList.sendRequest(interestRequest);
-        System.out.println("interest request send was passed: " + passed + " times");
+        int passed = bankList.sendRequest(interestRequest, aggregationId);
+
+        if (passed == 0) {
+            // TODO: reject directly
+            System.out.println("Rejected directly");
+            return;
+        }
+        aggregator.addAggregator(aggregationId, passed);
     }
 
     private void clientSend(ListViewLine listViewLine) {
