@@ -12,7 +12,7 @@ import java.util.*;
 
 import static jmsmessenger.Constants.HTTP_LOCALHOST_8080_CREDIT_REST_HISTORY;
 
-public class BrokerController implements Initializable, Observer {
+public class BrokerController implements Initializable {
 
     public ListView<ListViewLine> lvBroker;
 
@@ -33,8 +33,12 @@ public class BrokerController implements Initializable, Observer {
         creditHistoryEnricher = new CreditHistoryEnricher(HTTP_LOCALHOST_8080_CREDIT_REST_HISTORY);
 
         // create and subscribe gateways
-        clientGateway = new ClientGateway();
-        clientGateway.addObserver(this);
+        clientGateway = new ClientGateway() {
+            @Override
+            public void onResponse(LoanRequest loanRequest) {
+                bankSend(loanRequest);
+            }
+        };
 
         scatterGetter = new ScatterGetter() {
             @Override
@@ -52,13 +56,6 @@ public class BrokerController implements Initializable, Observer {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-    }
-
-    @Override
-    public void update(Observable o, Object arg) {
-
-        LoanRequest loanRequest = (LoanRequest) arg;
-        bankSend(loanRequest);
     }
 
     private void bankSend(LoanRequest loanRequest) {

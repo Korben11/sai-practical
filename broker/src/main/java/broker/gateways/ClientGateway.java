@@ -16,9 +16,8 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Observable;
 
-public class ClientGateway extends Observable {
+public abstract class ClientGateway {
     private MessageSender messageSender;
     private MessageReceiver messageReceiver;
     private Map<LoanRequest, Message> map;
@@ -39,7 +38,7 @@ public class ClientGateway extends Observable {
             try {
                 LoanRequest loanRequest = loanSerializer.deserializeLoanRequest(msg.getText());
                 map.put(loanRequest, message);
-                notify(loanRequest);
+                onResponse(loanRequest);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
@@ -59,8 +58,5 @@ public class ClientGateway extends Observable {
         messageSender.send(replyMsg, message.getJMSReplyTo());
     }
 
-    private void notify(LoanRequest request) {
-        setChanged();
-        notifyObservers(request);
-    }
+    public abstract void onResponse(LoanRequest loanRequest);
 }
