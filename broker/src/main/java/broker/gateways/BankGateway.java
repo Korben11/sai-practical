@@ -1,7 +1,7 @@
 package broker.gateways;
 
-import jmsmessenger.MessageReceiver;
-import jmsmessenger.MessageSender;
+import jmsmessenger.gateways.Consumer;
+import jmsmessenger.gateways.Producer;
 import jmsmessenger.models.BankInterestReply;
 import jmsmessenger.models.BankInterestRequest;
 import jmsmessenger.serializers.InterestSerializer;
@@ -17,19 +17,19 @@ import static jmsmessenger.Constants.AGGREGATION_ID;
 
 
 public abstract class BankGateway {
-    private MessageReceiver messageReceiver;
-    private MessageSender messageSender;
+    private Consumer consumer;
+    private Producer producer;
     private Map<String, BankInterestRequest> map;
     private InterestSerializer interestSerializer;
 
     public BankGateway() {
-        messageReceiver = new MessageReceiver(BANK_CLIENT_RESPONSE_QUEUE);
-        messageSender = new MessageSender();
+        consumer = new Consumer(BANK_CLIENT_RESPONSE_QUEUE);
+        producer = new Producer();
 
         interestSerializer = new InterestSerializer();
         map = new HashMap<>();
 
-        messageReceiver.onMessage(message -> {
+        consumer.onMessage(message -> {
             TextMessage msg = (TextMessage) message;
             try {
                 BankInterestReply interestReply = interestSerializer.deserializeBankInterestReply(msg.getText());
@@ -43,9 +43,9 @@ public abstract class BankGateway {
 
     public void sendRequest(BankInterestRequest interestRequest, String queue, Integer aggregationId) throws JMSException {
         String json = interestSerializer.serializeBankInterestRequest(interestRequest);
-        Message message = messageSender.createMessage(json);
+        Message message = producer.createMessage(json);
         message.setIntProperty(AGGREGATION_ID, aggregationId);
-        messageSender.send(message, queue);
+        producer.send(message, queue);
 
         map.put(message.getJMSMessageID(), interestRequest);
     }

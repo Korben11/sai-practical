@@ -1,4 +1,6 @@
-package jmsmessenger;
+package jmsmessenger.gateways;
+
+import jmsmessenger.Constants;
 
 import javax.jms.*;
 import javax.naming.Context;
@@ -6,7 +8,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.util.Properties;
 
-public class MessageSender {
+public class Producer {
     private String queue = null;
 
     // jms connection
@@ -15,13 +17,13 @@ public class MessageSender {
     private Destination destination;
     private MessageProducer producer;
 
-    public MessageSender(String queue) {
+    public Producer(String queue) {
         this.queue = queue;
 
         init();
     }
 
-    public MessageSender() {
+    public Producer() {
 
         init();
     }

@@ -1,4 +1,4 @@
-package jmsmessenger;
+package jmsmessenger.gateways;
 
 import jmsmessenger.Constants;
 
@@ -8,7 +8,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.util.Properties;
 
-public class MessageReceiver {
+public class Consumer {
 
     private String queue;
 
@@ -23,7 +23,7 @@ public class MessageReceiver {
     private Destination destination;
     private MessageConsumer consumer;
 
-    public MessageReceiver(String queue) {
+    public Consumer(String queue) {
         this.queue = queue;
 
         this.init();

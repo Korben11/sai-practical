@@ -1,8 +1,8 @@
 package broker.gateways;
 
 import broker.routers.ArchiveRouter;
-import jmsmessenger.MessageReceiver;
-import jmsmessenger.MessageSender;
+import jmsmessenger.gateways.Consumer;
+import jmsmessenger.gateways.Producer;
 import jmsmessenger.models.LoanArchive;
 import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
@@ -18,22 +18,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class ClientGateway {
-    private MessageSender messageSender;
-    private MessageReceiver messageReceiver;
+    private Producer producer;
+    private Consumer consumer;
     private Map<LoanRequest, Message> map;
     private LoanSerializer loanSerializer;
     private ArchiveRouter archiveRouter;
 
     public ClientGateway() {
-        messageSender = new MessageSender();
-        messageReceiver = new MessageReceiver(LOAN_CLIENT_REQUEST_QUEUE);
+        producer = new Producer();
+        consumer = new Consumer(LOAN_CLIENT_REQUEST_QUEUE);
 
         archiveRouter = new ArchiveRouter(HTTP_LOCALHOST_8080_ARCHIVE_REST_ACCEPTED);
 
         loanSerializer = new LoanSerializer();
         map = new HashMap<>();
 
-        messageReceiver.onMessage(message -> {
+        consumer.onMessage(message -> {
             TextMessage msg = (TextMessage) message;
             try {
                 LoanRequest loanRequest = loanSerializer.deserializeLoanRequest(msg.getText());
@@ -48,14 +48,14 @@ public abstract class ClientGateway {
     public void sendReply(LoanReply loanReply, LoanRequest loanRequest) throws JMSException {
         Message message = map.get(loanRequest);
         String json = loanSerializer.serializeLoanReply(loanReply);
-        Message replyMsg = messageSender.createMessage(json);
+        Message replyMsg = producer.createMessage(json);
         replyMsg.setJMSCorrelationID(message.getJMSMessageID());
 
         // content based router
         LoanArchive loanArchive = new LoanArchive(loanRequest.getSsn(), loanRequest.getAmount(), loanReply.getBankId(), loanReply.getInterest());
         archiveRouter.archive(loanArchive);
 
-        messageSender.send(replyMsg, message.getJMSReplyTo());
+        producer.send(replyMsg, message.getJMSReplyTo());
     }
 
     public abstract void onResponse(LoanRequest loanRequest);

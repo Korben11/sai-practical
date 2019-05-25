@@ -1,7 +1,7 @@
 package loanclient.gateway;
 
-import jmsmessenger.MessageReceiver;
-import jmsmessenger.MessageSender;
+import jmsmessenger.gateways.Consumer;
+import jmsmessenger.gateways.Producer;
 import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 import jmsmessenger.serializers.LoanSerializer;
@@ -14,19 +14,19 @@ import java.util.Map;
 
 
 public abstract class ClientGateway {
-    private MessageSender messageSender;
-    private MessageReceiver messageReceiver;
+    private Producer producer;
+    private Consumer consumer;
     private Map<String, LoanRequest> map;
     private LoanSerializer serializer;
 
     public ClientGateway(String requestQueue, String responseQueue) {
-        messageSender = new MessageSender(requestQueue);
-        messageReceiver = new MessageReceiver(responseQueue);
+        producer = new Producer(requestQueue);
+        consumer = new Consumer(responseQueue);
         serializer = new LoanSerializer();
 
         map = new HashMap<>();
 
-        messageReceiver.onMessage(message -> {
+        consumer.onMessage(message -> {
             TextMessage msg = (TextMessage) message;
             try {
                 LoanReply loanReply = serializer.deserializeLoanReply(msg.getText());
@@ -40,9 +40,9 @@ public abstract class ClientGateway {
 
     public void sendLoanRequest(LoanRequest loanRequest) throws JMSException {
         String json = serializer.serializeLoanRequest(loanRequest);
-        Message message = messageSender.createMessage(json);
-        message.setJMSReplyTo(messageReceiver.getDestination());
-        messageSender.send(message);
+        Message message = producer.createMessage(json);
+        message.setJMSReplyTo(consumer.getDestination());
+        producer.send(message);
         map.put(message.getJMSMessageID(), loanRequest);
     }
 
