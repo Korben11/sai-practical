@@ -10,14 +10,12 @@ import javafx.scene.control.TextField;
 
 import javax.jms.*;
 import java.net.URL;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.ResourceBundle;
 
 import static jmsmessenger.Constants.BANK_CLIENT_REQUEST_QUEUE;
 import static jmsmessenger.Constants.BANK_CLIENT_RESPONSE_QUEUE;
 
-public class BankController implements Initializable, Observer {
+public class BankController implements Initializable {
 
     private BankGateway gateway;
 
@@ -31,8 +29,13 @@ public class BankController implements Initializable, Observer {
 
     public void initGateway(String bank) {
         BANK_ID = bank;
-        gateway = new BankGateway(BANK_ID + BANK_CLIENT_REQUEST_QUEUE, BANK_CLIENT_RESPONSE_QUEUE);
-        gateway.addObserver(this);
+        gateway = new BankGateway(BANK_ID + BANK_CLIENT_REQUEST_QUEUE, BANK_CLIENT_RESPONSE_QUEUE) {
+            @Override
+            public void onResponse(BankInterestRequest interestRequest) {
+                ListViewLine listViewLine = new ListViewLine(interestRequest);
+                lvBankRequestReply.getItems().add(listViewLine);
+            }
+        };
     }
 
     @FXML
@@ -77,12 +80,5 @@ public class BankController implements Initializable, Observer {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         tfInterest.setText("10");
-    }
-
-    @Override
-    public void update(Observable o, Object arg) {
-        BankInterestRequest request = (BankInterestRequest) arg;
-        ListViewLine listViewLine = new ListViewLine(request);
-        lvBankRequestReply.getItems().add(listViewLine);
     }
 }

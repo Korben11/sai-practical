@@ -2,7 +2,6 @@ package bank.gateway;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Observable;
 
 import static jmsmessenger.Constants.AGGREGATION_ID;
 import jmsmessenger.models.BankInterestReply;
@@ -15,7 +14,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 
-public class BankGateway extends Observable {
+public abstract class BankGateway {
     private MessageSender messageSender;
     private MessageReceiver messageReceiver;
     private Map<BankInterestRequest, Message> map;
@@ -33,7 +32,7 @@ public class BankGateway extends Observable {
             try {
                 BankInterestRequest request = serializer.deserializeBankInterestRequest(msg.getText());
                 map.put(request, message);
-                notify(request);
+                onResponse(request);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
@@ -49,8 +48,5 @@ public class BankGateway extends Observable {
         messageSender.send(message);
     }
 
-    private void notify(BankInterestRequest request) {
-        setChanged();
-        notifyObservers(request);
-    }
+    public abstract void onResponse(BankInterestRequest interestRequest);
 }

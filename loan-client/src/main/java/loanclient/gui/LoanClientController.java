@@ -4,7 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import loanclient.gateway.ClientArgs;
+import jmsmessenger.models.LoanReply;
 import loanclient.gateway.ClientGateway;
 import jmsmessenger.models.LoanRequest;
 
@@ -15,7 +15,7 @@ import java.util.*;
 import static jmsmessenger.Constants.LOAN_CLIENT_REQUEST_QUEUE;
 import static jmsmessenger.Constants.LOAN_CLIENT_RESPONSE_QUEUE;
 
-public class LoanClientController implements Initializable, Observer {
+public class LoanClientController implements Initializable {
 
     private static String CLIENT_ID;
 
@@ -32,8 +32,14 @@ public class LoanClientController implements Initializable, Observer {
 
     public void initGateway(String name){
         CLIENT_ID = name;
-        gateway = new ClientGateway(LOAN_CLIENT_REQUEST_QUEUE, LOAN_CLIENT_RESPONSE_QUEUE + CLIENT_ID);
-        gateway.addObserver(this);
+        gateway = new ClientGateway(LOAN_CLIENT_REQUEST_QUEUE, LOAN_CLIENT_RESPONSE_QUEUE + CLIENT_ID) {
+            @Override
+            public void onResponse(LoanRequest loanRequest, LoanReply loanReply) {
+                ListViewLine lvl = getRequestReply(loanRequest);
+                lvl.setLoanReply(loanReply);
+                lvLoanRequestReply.refresh();
+            }
+        };
     }
 
     @FXML
@@ -78,14 +84,5 @@ public class LoanClientController implements Initializable, Observer {
         tfSsn.setText("123456");
         tfAmount.setText("80000");
         tfTime.setText("30");
-    }
-
-    // listen to messages
-    @Override
-    public void update(Observable o, Object arg) {
-        ClientArgs clientArgs = (ClientArgs) arg;
-        ListViewLine lvl = getRequestReply(clientArgs.loanRequest);
-        lvl.setLoanReply(clientArgs.loanReply);
-        lvLoanRequestReply.refresh();
     }
 }
