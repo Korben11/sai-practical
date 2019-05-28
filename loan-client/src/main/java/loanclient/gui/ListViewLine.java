@@ -3,6 +3,8 @@ package loanclient.gui;
 import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 
+import java.text.MessageFormat;
+
 /**
  * This class is an item/line for a ListView. It makes it possible to put both BankInterestRequest and BankInterestReply object in one item in a ListView.
  */
@@ -40,7 +42,14 @@ class ListViewLine {
      */
     @Override
     public String toString() {
-        return loanRequest.toString() + "  --->  " + ((loanReply != null) ? loanReply.toString() : "waiting for loan reply...");
+        String format = "{0} ---> {1}";
+
+        if (loanReply != null) {
+            if (loanReply.isRejected())
+                return MessageFormat.format(format, loanRequest.toString(), "Rejected");
+        }
+
+        return MessageFormat.format(format, loanRequest.toString(), ((loanReply != null) ? loanReply.toString() : "waiting for loan reply..."));
     }
 
 }

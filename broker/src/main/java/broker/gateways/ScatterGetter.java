@@ -51,15 +51,14 @@ public abstract class ScatterGetter {
         recipientList = new BankRecipientList(bankGateway);
     }
 
-    public void applyForLoan(BankInterestRequest request) {
+    public int applyForLoan(BankInterestRequest request) {
         Aggregator.id++;
         int passed = recipientList.sendRequest(request, Aggregator.id);
         if (passed == 0) {
-            // TODO: reject directly
-            System.out.println("Rejected directly");
-            return;
+            return passed;
         }
         aggregator.addAggregator(Aggregator.id, passed);
+        return passed;
     }
 
     public abstract void onBankInterestSelected(IRequest request, IResponse response);

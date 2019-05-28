@@ -93,7 +93,15 @@ public class BrokerController implements Initializable {
         map.put(interestRequest, listViewLine);
         lvBroker.refresh();
 
-        scatterGetter.applyForLoan(interestRequest);
+        int sendRequests = scatterGetter.applyForLoan(interestRequest);
+        System.out.println(sendRequests);
+        if (sendRequests > 0)
+            return;
+
+        listViewLine.setLoanReply(new LoanReply(true));
+        listViewLine.setBankReply(new BankInterestReply());
+        clientSend(listViewLine);
+        lvBroker.refresh();
     }
 
     private void clientSend(ListViewLine listViewLine) {

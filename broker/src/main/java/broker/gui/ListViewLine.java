@@ -26,7 +26,6 @@ public class ListViewLine {
         this.loanReply = loanReply;
     }
 
-
     public void setBankReply(BankInterestReply interestReply) {
         this.interestReply = interestReply;
     }
@@ -42,11 +41,18 @@ public class ListViewLine {
     public String toString() {
 
         String reply = "waiting...";
+        String format = "{0} ---> {1}";
+
+        if (loanReply != null) {
+            if (loanReply.isRejected()) {
+                return MessageFormat.format(format, loanRequest.toString(), "Rejected");
+            }
+        }
 
         if (loanReply != null) {
             reply = loanReply.toString();
         }
-        return MessageFormat.format("{0} ---> {1}", loanRequest.toString(), reply);
+        return MessageFormat.format(format, loanRequest.toString(), reply);
 
     }
 }
