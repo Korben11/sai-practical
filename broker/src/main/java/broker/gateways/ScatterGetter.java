@@ -1,37 +1,50 @@
 package broker.gateways;
 
 import broker.recipient.BankRecipientList;
+import jmsmessenger.gateways.AsyncSenderGateway;
+import jmsmessenger.gateways.IRequest;
+import jmsmessenger.gateways.IResponse;
 import jmsmessenger.models.BankInterestReply;
 import jmsmessenger.models.BankInterestRequest;
+import jmsmessenger.serializers.GsonSerializer;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
 import java.util.HashMap;
 import java.util.Map;
 
+import static jmsmessenger.Constants.AGGREGATION_ID;
+import static jmsmessenger.Constants.BANK_CLIENT_RESPONSE_QUEUE;
+
 public abstract class ScatterGetter {
 
-    private BankGateway bankGateway;
+    private AsyncSenderGateway bankGateway;
     private BankRecipientList recipientList;
     private Aggregator aggregator;
 
-    private static int aggregationId = 0;
-
-    private Map<Integer, BankInterestRequest> mapIntegerBankInterestRequest;
+    private Map<Integer, IRequest> mapAggregationIdToRequest;
 
     public ScatterGetter() {
-        mapIntegerBankInterestRequest = new HashMap<>();
+        mapAggregationIdToRequest = new HashMap<>();
 
         aggregator = new Aggregator() {
             @Override
             public void onAllRepliesReceived(BankInterestReply interestReply, Integer aggregationId) {
-                onBankInterestSelected(mapIntegerBankInterestRequest.get(aggregationId), interestReply);
+                onBankInterestSelected(mapAggregationIdToRequest.get(aggregationId), interestReply);
             }
         };
 
-        this.bankGateway = new BankGateway() {
+        bankGateway = new AsyncSenderGateway(new GsonSerializer(BankInterestRequest.class, BankInterestReply.class), BANK_CLIENT_RESPONSE_QUEUE, null) {
             @Override
-            public void onBankInterestArrived(BankInterestRequest interestRequest, BankInterestReply interestReply, Integer aggregationId) {
-                if (!mapIntegerBankInterestRequest.containsKey(aggregationId)) mapIntegerBankInterestRequest.put(aggregationId, interestRequest);
-                aggregator.addBankInterestReply(interestReply, aggregationId);
+            public void onMessageArrived(IRequest request, IResponse response, Message message) {
+                Integer aggId = null;
+                try {
+                    aggId = message.getIntProperty(AGGREGATION_ID);
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+                if (!mapAggregationIdToRequest.containsKey(aggId)) mapAggregationIdToRequest.put(aggId, request);
+                aggregator.addBankInterestReply(response, aggId);
             }
         };
 
@@ -39,15 +52,15 @@ public abstract class ScatterGetter {
     }
 
     public void applyForLoan(BankInterestRequest request) {
-        aggregationId++;
-        int passed = recipientList.sendRequest(request, aggregationId);
+        Aggregator.id++;
+        int passed = recipientList.sendRequest(request, Aggregator.id);
         if (passed == 0) {
             // TODO: reject directly
             System.out.println("Rejected directly");
             return;
         }
-        aggregator.addAggregator(aggregationId, passed);
+        aggregator.addAggregator(Aggregator.id, passed);
     }
 
-    public abstract void onBankInterestSelected(BankInterestRequest interestRequest, BankInterestReply interestReply);
+    public abstract void onBankInterestSelected(IRequest request, IResponse response);
 }

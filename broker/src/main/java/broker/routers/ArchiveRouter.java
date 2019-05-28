@@ -1,5 +1,6 @@
 package broker.routers;
 
+import jmsmessenger.gateways.IRouter;
 import jmsmessenger.models.LoanArchive;
 import jmsmessenger.serializers.LoanArchiveSerializer;
 import org.glassfish.jersey.client.ClientConfig;
@@ -11,7 +12,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
-public class ArchiveRouter {
+public class ArchiveRouter implements IRouter {
     private WebTarget client;
     private LoanArchiveSerializer serializer;
 

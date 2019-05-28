@@ -4,9 +4,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import jmsmessenger.gateways.AsyncSenderGateway;
+import jmsmessenger.gateways.IRequest;
+import jmsmessenger.gateways.IResponse;
 import jmsmessenger.models.LoanReply;
-import loanclient.gateway.ClientGateway;
 import jmsmessenger.models.LoanRequest;
+import jmsmessenger.serializers.GsonSerializer;
 
 import javax.jms.*;
 import java.net.URL;
@@ -19,7 +22,7 @@ public class LoanClientController implements Initializable {
 
     private static String CLIENT_ID;
 
-    private ClientGateway gateway;
+    private AsyncSenderGateway asyncGateway;
 
     // UI fields
     public TextField tfSsn;
@@ -32,11 +35,12 @@ public class LoanClientController implements Initializable {
 
     public void initGateway(String name){
         CLIENT_ID = name;
-        gateway = new ClientGateway(LOAN_CLIENT_REQUEST_QUEUE, LOAN_CLIENT_RESPONSE_QUEUE + CLIENT_ID) {
+
+        asyncGateway = new AsyncSenderGateway(new GsonSerializer(LoanRequest.class, LoanReply.class),  LOAN_CLIENT_RESPONSE_QUEUE + CLIENT_ID, LOAN_CLIENT_REQUEST_QUEUE) {
             @Override
-            public void onResponse(LoanRequest loanRequest, LoanReply loanReply) {
-                ListViewLine lvl = getRequestReply(loanRequest);
-                lvl.setLoanReply(loanReply);
+            public void onMessageArrived(IRequest request, IResponse response, Message message) {
+                ListViewLine lvl = getRequestReply((LoanRequest) request);
+                lvl.setLoanReply((LoanReply) response);
                 lvLoanRequestReply.refresh();
             }
         };
@@ -54,7 +58,7 @@ public class LoanClientController implements Initializable {
         ListViewLine listViewLine = new ListViewLine(loanRequest);
         lvLoanRequestReply.getItems().add(listViewLine);
         try {
-            gateway.sendLoanRequest(loanRequest);
+            asyncGateway.sendRequest(loanRequest, null, null);
         } catch (JMSException e) {
             e.printStackTrace();
         }

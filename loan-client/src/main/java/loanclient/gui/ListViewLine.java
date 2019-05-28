@@ -1,6 +1,5 @@
 package loanclient.gui;
 
-
 import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 

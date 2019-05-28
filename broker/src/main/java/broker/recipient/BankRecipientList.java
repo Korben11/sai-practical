@@ -1,7 +1,8 @@
 package broker.recipient;
 
-import broker.gateways.BankGateway;
 import jmsmessenger.Constants;
+import jmsmessenger.gateways.AsyncSenderGateway;
+import jmsmessenger.gateways.IRequest;
 import jmsmessenger.models.BankInterestRequest;
 import net.sourceforge.jeval.EvaluationException;
 import net.sourceforge.jeval.Evaluator;
@@ -13,14 +14,15 @@ import static jmsmessenger.Constants.*;
 public class BankRecipientList {
 
     private BankRule banksRules[] = {
+//            new BankRule(Constants.BANK.ING, AMOUNT_GTE_200000_AND_AMOUNT_LTE_300000_AND_TIME_LTE_20),
             new BankRule(Constants.BANK.ING, AMOUNT_LTE_100000_AND_TIME_LTE_10),
             new BankRule(Constants.BANK.ABN, AMOUNT_GTE_200000_AND_AMOUNT_LTE_300000_AND_TIME_LTE_20),
             new BankRule(Constants.BANK.RABO, AMOUNT_LTE_250000_AND_TIME_LTE_15),
     };
-    private BankGateway bankGateway;
+    private AsyncSenderGateway bankGateway;
     private Evaluator evaluator;
 
-    public BankRecipientList(BankGateway bankGateway) {
+    public BankRecipientList(AsyncSenderGateway bankGateway) {
         this.bankGateway = bankGateway;
         evaluator = new Evaluator();
     }
@@ -31,11 +33,11 @@ public class BankRecipientList {
         setEvaluator(request.getAmount(), request.getTime());
 
         try {
-            for (BankRule bankRule: banksRules) {
+            for (BankRule bankRule : banksRules) {
                 if (!(evaluator.evaluate(bankRule.getRule()).equals("1.0")))
                     continue;
                 passed++;
-                bankGateway.sendRequest(request, bankRule.getBank() + Constants.BANK_CLIENT_REQUEST_QUEUE, aggregationId);
+                bankGateway.sendRequest((IRequest) request, bankRule.getBank() + Constants.BANK_CLIENT_REQUEST_QUEUE, aggregationId);
             }
         } catch (EvaluationException e) {
             e.printStackTrace();

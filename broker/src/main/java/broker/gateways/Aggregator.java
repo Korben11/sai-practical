@@ -1,5 +1,6 @@
 package broker.gateways;
 
+import jmsmessenger.gateways.IResponse;
 import jmsmessenger.models.BankInterestReply;
 
 import java.util.ArrayList;
@@ -8,8 +9,10 @@ import java.util.Map;
 
 public abstract class Aggregator {
 
+    public static int id = 0;
+
     private Map<Integer, Integer> mapAggIdToSentCount;
-    private Map<Integer, ArrayList<BankInterestReply>> mapAggIdToInterestReplies;
+    private Map<Integer, ArrayList<IResponse>> mapAggIdToInterestReplies;
 
     public Aggregator() {
         mapAggIdToSentCount = new HashMap<>();
@@ -21,8 +24,8 @@ public abstract class Aggregator {
         mapAggIdToInterestReplies.put(aggregationId, new ArrayList<>());
     }
 
-    public void addBankInterestReply(BankInterestReply interestReply, Integer aggregationId) {
-        mapAggIdToInterestReplies.get(aggregationId).add(interestReply);
+    public void addBankInterestReply(IResponse response, Integer aggregationId) {
+        mapAggIdToInterestReplies.get(aggregationId).add(response);
         checkReplies(aggregationId);
     }
 
@@ -32,13 +35,13 @@ public abstract class Aggregator {
         }
 
         BankInterestReply bankInterestReply = null;
-        for(BankInterestReply interestReply: mapAggIdToInterestReplies.get(aggregatorId)) {
+        for(IResponse interestReply: mapAggIdToInterestReplies.get(aggregatorId)) {
             if (bankInterestReply == null) {
-                bankInterestReply = interestReply;
+                bankInterestReply = (BankInterestReply) interestReply;
                 continue;
             }
-            if (interestReply.getInterest() < bankInterestReply.getInterest()) {
-                bankInterestReply = interestReply;
+            if (((BankInterestReply)interestReply).getInterest() < bankInterestReply.getInterest()) {
+                bankInterestReply = (BankInterestReply)interestReply;
             }
         }
 

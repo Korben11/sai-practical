@@ -1,6 +1,5 @@
 package bank.gui;
 
-
 import jmsmessenger.models.BankInterestReply;
 import jmsmessenger.models.BankInterestRequest;
 
