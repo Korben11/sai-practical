@@ -1,78 +1,51 @@
 package jmsmessenger.gateways;
 
-import jmsmessenger.Constants;
-
-import javax.jms.*;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
 import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.util.Properties;
 
-public class Producer {
-    private String queue = null;
+public class Producer extends MessageGateway implements IProducer {
 
-    // jms connection
-    private Connection connection;
-    private Session session;
-    private Destination destination;
     private MessageProducer producer;
 
     public Producer(String queue) {
-        this.queue = queue;
-
-        init();
+        super(queue);
     }
 
     public Producer() {
-
-        init();
-    }
-
-    private void init() {
-        // set properties
-        Properties properties = new Properties();
-        properties.setProperty(Context.INITIAL_CONTEXT_FACTORY,
-                Constants.ORG_APACHE_ACTIVEMQ_JNDI_ACTIVE_MQINITIAL_CONTEXT_FACTORY);
-        properties.setProperty(Context.PROVIDER_URL, Constants.TCP_LOCALHOST_61616);
-        if (queue!=null)
-            properties.put((Constants.QUEUE + queue), queue);
-
-        // create connection and session
-        try {
-            Context jndiContext = new InitialContext(properties);
-            ConnectionFactory connectionFactory = (ConnectionFactory) jndiContext.lookup(Constants.CONNECTION_FACTORY);
-            connection = connectionFactory.createConnection();
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-            // create destination and producer
-            if (queue==null) {
-                producer = session.createProducer(null);
-            } else {
-                destination = (Destination) jndiContext.lookup(queue);
-                producer = session.createProducer(destination);
-            }
-
-        } catch (NamingException e) {
-            e.printStackTrace();
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
+        super();
     }
 
     public Message createMessage(String body) throws JMSException {
         return session.createTextMessage(body);
     }
 
+    @Override
+    public void setUp(Context jndiContext) throws NamingException, JMSException {
+        if (queue == null) {
+            producer = session.createProducer(null);
+        } else {
+            super.destination = (Destination) jndiContext.lookup(queue);
+            producer = session.createProducer(destination);
+        }
+    }
+
+    @Override
     public void send(Message message) throws JMSException {
         producer.send(message);
     }
 
+    @Override
     public void send(Message message, String queue) throws JMSException {
-
         producer.send(session.createQueue(queue), message);
     }
 
+    @Override
     public void send(Message message, Destination queue) throws JMSException {
+        System.out.println("Send to: " + queue.toString());
         producer.send(queue, message);
     }
 }
