@@ -8,12 +8,9 @@ import javafx.scene.control.ListView;
 import jmsmessenger.gateways.AsyncReceiverGateway;
 import jmsmessenger.gateways.IRequest;
 import jmsmessenger.gateways.IResponse;
-import jmsmessenger.gateways.IRouter;
 import jmsmessenger.models.*;
 import jmsmessenger.serializers.GsonSerializer;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
 import java.net.URL;
 import java.util.*;
 
@@ -27,10 +24,10 @@ public class BrokerController implements Initializable {
     public Map<IRequest, ListViewLine> map;
 
     // Gateways
-//    private ClientGateway clientGateway;
     private AsyncReceiverGateway clientGateway;
     private ScatterGetter scatterGetter;
 
+    private ArchiveRouter archiveRouter;
     private CreditHistoryEnricher creditHistoryEnricher;
 
     public BrokerController() {
@@ -39,22 +36,36 @@ public class BrokerController implements Initializable {
         map = new HashMap<>();
 
         creditHistoryEnricher = new CreditHistoryEnricher(HTTP_LOCALHOST_8080_CREDIT_REST_HISTORY);
+        archiveRouter = new ArchiveRouter(HTTP_LOCALHOST_8080_ARCHIVE_REST_ACCEPTED);
 
-        clientGateway = new AsyncReceiverGateway(new GsonSerializer(LoanRequest.class, LoanReply.class), LOAN_CLIENT_REQUEST_QUEUE, null, new ArchiveRouter(HTTP_LOCALHOST_8080_ARCHIVE_REST_ACCEPTED)) {
+        clientGateway = new AsyncReceiverGateway(new GsonSerializer(LoanRequest.class, LoanReply.class), LOAN_CLIENT_REQUEST_QUEUE, null) {
             @Override
-            public void setAggregationId(Message message, Message requestMessage) throws JMSException {}
-
-            @Override
-            public void contentBasedRouters(IRequest request, IResponse response, IRouter router) {
+            public void onMessageArrived(IRequest request, IResponse response, Integer aggregationId) {
                 LoanRequest loanRequest = (LoanRequest) request;
-                LoanReply loanReply = (LoanReply) response;
-                LoanArchive loanArchive = new LoanArchive(loanRequest.getSsn(), loanRequest.getAmount(), loanReply.getBankId(), loanReply.getInterest());
-                ((ArchiveRouter) router).archive(loanArchive);
-            }
+                BankInterestRequest interestRequest = new BankInterestRequest(loanRequest.getAmount(), loanRequest.getTime());
 
-            @Override
-            public void onMessageArrived(IRequest request, IResponse response, Message message) {
-                bankSend((LoanRequest) request);
+                // content enricher
+                CreditHistory creditHistory = creditHistoryEnricher.getCreditHistory(loanRequest.getSsn());
+                if (creditHistory != null) {
+                    interestRequest.setHistory(creditHistory.getHistory());
+                    interestRequest.setCreditScore(creditHistory.getCredit());
+                }
+
+                ListViewLine listViewLine = new ListViewLine(loanRequest, interestRequest);
+
+                lvBroker.getItems().add(listViewLine);
+                map.put(interestRequest, listViewLine);
+
+                int sendRequests = scatterGetter.applyForLoan(interestRequest);
+                if (sendRequests > 0) {
+                    lvBroker.refresh();
+                    return;
+                }
+                
+                listViewLine.setLoanReply(new LoanReply(true));
+                listViewLine.setBankReply(new BankInterestReply());
+                clientSend(listViewLine);
+                lvBroker.refresh();
             }
         };
 
@@ -77,38 +88,11 @@ public class BrokerController implements Initializable {
 
     }
 
-    private void bankSend(LoanRequest loanRequest) {
-
-        BankInterestRequest interestRequest = new BankInterestRequest(loanRequest.getAmount(), loanRequest.getTime());
-
-        // content enricher
-        CreditHistory creditHistory = creditHistoryEnricher.getCreditHistory(loanRequest.getSsn());
-        if (creditHistory != null) {
-            interestRequest.setHistory(creditHistory.getHistory());
-            interestRequest.setCreditScore(creditHistory.getCredit());
-        }
-
-        ListViewLine listViewLine = new ListViewLine(loanRequest, interestRequest);
-        lvBroker.getItems().add(listViewLine);
-        map.put(interestRequest, listViewLine);
-        lvBroker.refresh();
-
-        int sendRequests = scatterGetter.applyForLoan(interestRequest);
-        System.out.println(sendRequests);
-        if (sendRequests > 0)
-            return;
-
-        listViewLine.setLoanReply(new LoanReply(true));
-        listViewLine.setBankReply(new BankInterestReply());
-        clientSend(listViewLine);
-        lvBroker.refresh();
-    }
-
     private void clientSend(ListViewLine listViewLine) {
-        try {
-            clientGateway.sendReply(listViewLine.getLoanRequest(), listViewLine.getLoanReply());
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
+        LoanRequest loanRequest = listViewLine.getLoanRequest();
+        LoanReply loanReply = listViewLine.getLoanReply();
+        LoanArchive loanArchive = new LoanArchive(loanRequest.getSsn(), loanRequest.getAmount(), loanReply.getBankId(), loanReply.getInterest());
+        archiveRouter.archive(loanArchive);
+        clientGateway.sendReply(listViewLine.getLoanRequest(), listViewLine.getLoanReply());
     }
 }

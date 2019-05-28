@@ -7,15 +7,15 @@ import javax.jms.MessageProducer;
 import javax.naming.Context;
 import javax.naming.NamingException;
 
-public class Producer extends MessageGateway implements IProducer {
+public class MessageSenderGateway extends MessageGateway implements IProducer {
 
     private MessageProducer producer;
 
-    public Producer(String queue) {
+    public MessageSenderGateway(String queue) {
         super(queue);
     }
 
-    public Producer() {
+    public MessageSenderGateway() {
         super();
     }
 

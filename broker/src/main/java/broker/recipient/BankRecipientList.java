@@ -7,8 +7,6 @@ import jmsmessenger.models.BankInterestRequest;
 import net.sourceforge.jeval.EvaluationException;
 import net.sourceforge.jeval.Evaluator;
 
-import javax.jms.JMSException;
-
 import static jmsmessenger.Constants.*;
 
 public class BankRecipientList {
@@ -40,8 +38,6 @@ public class BankRecipientList {
                 bankGateway.sendRequest((IRequest) request, bankRule.getBank() + Constants.BANK_CLIENT_REQUEST_QUEUE, aggregationId);
             }
         } catch (EvaluationException e) {
-            e.printStackTrace();
-        } catch (JMSException e) {
             e.printStackTrace();
         }
 

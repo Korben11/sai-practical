@@ -2,11 +2,10 @@ package jmsmessenger.gateways;
 
 import jmsmessenger.serializers.Serializer;
 
-import javax.jms.Message;
 
 public abstract class ApplicationGateway {
-    protected Consumer consumer;
-    protected Producer producer;
+    protected MessageReceiverGateway messageReceiverGateway;
+    protected MessageSenderGateway messageSenderGateway;
     protected Serializer serializer;
 
     public ApplicationGateway(Serializer serializer, String consumerQueue, String producerQueue) {
@@ -14,9 +13,9 @@ public abstract class ApplicationGateway {
         System.out.println("consumerQueue: " + consumerQueue);
         System.out.println("producerQueue: " + producerQueue);
 
-        consumer = new Consumer(consumerQueue);
-        producer = new Producer(producerQueue);
+        messageReceiverGateway = new MessageReceiverGateway(consumerQueue);
+        messageSenderGateway = new MessageSenderGateway(producerQueue);
     }
 
-    public abstract void onMessageArrived(IRequest request, IResponse response, Message message);
+    public abstract void onMessageArrived(IRequest request, IResponse response, Integer aggregationId);
 }

@@ -4,7 +4,7 @@ import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.NamingException;
 
-public class Consumer extends MessageGateway implements IConsumer {
+public class MessageReceiverGateway extends MessageGateway implements IConsumer {
 
     private MessageConsumer consumer;
 
@@ -12,11 +12,11 @@ public class Consumer extends MessageGateway implements IConsumer {
         return destination;
     }
 
-    public Consumer(String queue) {
+    public MessageReceiverGateway(String queue) {
         super(queue);
     }
 
-    public Consumer() {
+    public MessageReceiverGateway() {
         super();
     }
 

@@ -36,15 +36,9 @@ public abstract class ScatterGetter {
 
         bankGateway = new AsyncSenderGateway(new GsonSerializer(BankInterestRequest.class, BankInterestReply.class), BANK_CLIENT_RESPONSE_QUEUE, null) {
             @Override
-            public void onMessageArrived(IRequest request, IResponse response, Message message) {
-                Integer aggId = null;
-                try {
-                    aggId = message.getIntProperty(AGGREGATION_ID);
-                } catch (JMSException e) {
-                    e.printStackTrace();
-                }
-                if (!mapAggregationIdToRequest.containsKey(aggId)) mapAggregationIdToRequest.put(aggId, request);
-                aggregator.addBankInterestReply(response, aggId);
+            public void onMessageArrived(IRequest request, IResponse response, Integer aggregationId) {
+                if (!mapAggregationIdToRequest.containsKey(aggregationId)) mapAggregationIdToRequest.put(aggregationId, request);
+                aggregator.addBankInterestReply(response, aggregationId);
             }
         };
 

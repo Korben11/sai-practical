@@ -17,37 +17,43 @@ public abstract class AsyncSenderGateway extends ApplicationGateway {
         super(serializer, consumerQueue, producerQueue);
         map = new HashMap<>();
 
-        consumer.onMessage(message -> {
+        messageReceiverGateway.onMessage(message -> {
             TextMessage msg = (TextMessage) message;
+            Integer aggregationId = null;
             try {
+                if (message.propertyExists(AGGREGATION_ID))
+                    aggregationId = message.getIntProperty(AGGREGATION_ID);
                 System.out.println("AsyncSenderGateway received message: " + msg.getText());
                 IResponse response = serializer.deserializeResponse(msg.getText());
                 IRequest request = map.get(message.getJMSCorrelationID());
-                onMessageArrived(request, response, message);
+
+                onMessageArrived(request, response, aggregationId);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    public void sendRequest(IRequest request, String queue, Integer aggregationId) throws JMSException {
+    public void sendRequest(IRequest request, String queue, Integer aggregationId) {
         String json = serializer.serializeRequest(request);
         System.out.println("Sending json request: " + json);
-        Message message = producer.createMessage(json);
-        message.setJMSReplyTo(consumer.getDestination());
+        try {
+            Message message = messageSenderGateway.createMessage(json);
+            message.setJMSReplyTo(messageReceiverGateway.getDestination());
+            if (aggregationId != null) {
+                message.setIntProperty(AGGREGATION_ID, aggregationId);
+            }
 
-        if (aggregationId != null) {
-            message.setIntProperty(AGGREGATION_ID, aggregationId);
-        }
+            if (queue != null) {
+                messageSenderGateway.send(message, queue);
+                map.put(message.getJMSMessageID(), request);
+                return;
+            }
 
-        if (queue != null) {
-            producer.send(message, queue);
+            messageSenderGateway.send(message);
             map.put(message.getJMSMessageID(), request);
-            return;
+        } catch (JMSException e) {
+            e.printStackTrace();
         }
-
-        producer.send(message);
-        map.put(message.getJMSMessageID(), request);
     }
-
 }

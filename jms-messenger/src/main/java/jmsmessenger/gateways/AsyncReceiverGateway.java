@@ -8,66 +8,45 @@ import javax.jms.TextMessage;
 import java.util.HashMap;
 import java.util.Map;
 
+import static jmsmessenger.Constants.AGGREGATION_ID;
+
 public abstract class AsyncReceiverGateway extends ApplicationGateway {
     private Map<IRequest, Message> map;
-    private IRouter router;
 
     public AsyncReceiverGateway(Serializer serializer, String consumerQueue, String producerQueue) {
         super(serializer, consumerQueue, producerQueue);
         map = new HashMap<>();
 
-        consumer.onMessage(message -> {
+        messageReceiverGateway.onMessage(message -> {
             TextMessage msg = (TextMessage) message;
+            Integer aggregationId = null;
             try {
+                if (message.propertyExists(AGGREGATION_ID))
+                    aggregationId = message.getIntProperty(AGGREGATION_ID);
                 System.out.println("AsyncReceiverGateway received message: " + msg.getText());
                 IRequest request = serializer.deserializeRequest(msg.getText());
                 map.put(request, message);
-                onMessageArrived(request, null, message);
+                onMessageArrived(request, null, aggregationId);
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    public AsyncReceiverGateway(Serializer serializer, String consumerQueue, String producerQueue, IRouter router) {
-        super(serializer, consumerQueue, producerQueue);
-        this.router = router;
-        map = new HashMap<>();
-
-        consumer.onMessage(message -> {
-            TextMessage msg = (TextMessage) message;
-            try {
-                IRequest request = serializer.deserializeRequest(msg.getText());
-                map.put(request, message);
-                onMessageArrived(request, null, message);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    public void sendReply(IRequest request, IResponse response) throws JMSException {
+    public void sendReply(IRequest request, IResponse response) {
         Message requestMessage = map.get(request);
         String json = serializer.serializeResponse(response);
         System.out.println("AsyncReceiverGateway sendReply: " + json);
-        Message message = producer.createMessage(json);
-        message.setJMSCorrelationID(requestMessage.getJMSMessageID());
-        this.setAggregationId(message, requestMessage);
-        this.contentBasedRouters(request, response, this.router);
-        producer.send(message, requestMessage.getJMSReplyTo());
+        Message message = null;
+        try {
+            message = messageSenderGateway.createMessage(json);
+            message.setJMSCorrelationID(requestMessage.getJMSMessageID());
+            if (requestMessage.propertyExists(AGGREGATION_ID))
+                message.setIntProperty(AGGREGATION_ID, requestMessage.getIntProperty(AGGREGATION_ID));
+            messageSenderGateway.send(message, requestMessage.getJMSReplyTo());
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
     }
-
-    public abstract void setAggregationId(Message message, Message requestMessage) throws JMSException;
-//    {
-        // override in case needed
-//        message.setIntProperty(AGGREGATION_ID, requestMessage.getIntProperty(AGGREGATION_ID));
-//    }
-
-    public abstract void contentBasedRouters(IRequest request, IResponse response, IRouter router);
-//    {
-        // override in case needed
-//        LoanArchive loanArchive = new LoanArchive(loanRequest.getSsn(), loanRequest.getAmount(), loanReply.getBankId(), loanReply.getInterest());
-//        archiveRouter.archive(loanArchive);
-//    }
 
 }

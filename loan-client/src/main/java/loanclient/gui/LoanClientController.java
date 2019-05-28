@@ -11,7 +11,6 @@ import jmsmessenger.models.LoanReply;
 import jmsmessenger.models.LoanRequest;
 import jmsmessenger.serializers.GsonSerializer;
 
-import javax.jms.*;
 import java.net.URL;
 import java.util.*;
 
@@ -38,7 +37,7 @@ public class LoanClientController implements Initializable {
 
         asyncGateway = new AsyncSenderGateway(new GsonSerializer(LoanRequest.class, LoanReply.class),  LOAN_CLIENT_RESPONSE_QUEUE + CLIENT_ID, LOAN_CLIENT_REQUEST_QUEUE) {
             @Override
-            public void onMessageArrived(IRequest request, IResponse response, Message message) {
+            public void onMessageArrived(IRequest request, IResponse response, Integer aggregationId) {
                 ListViewLine lvl = getRequestReply((LoanRequest) request);
                 lvl.setLoanReply((LoanReply) response);
                 lvLoanRequestReply.refresh();
@@ -57,11 +56,7 @@ public class LoanClientController implements Initializable {
         // create the ListView line with the request and add it to lvLoanRequestReply
         ListViewLine listViewLine = new ListViewLine(loanRequest);
         lvLoanRequestReply.getItems().add(listViewLine);
-        try {
-            asyncGateway.sendRequest(loanRequest, null, null);
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
+        asyncGateway.sendRequest(loanRequest, null, null);
     }
 
     /**

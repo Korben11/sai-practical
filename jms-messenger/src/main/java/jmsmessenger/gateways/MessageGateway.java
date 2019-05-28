@@ -42,7 +42,7 @@ public abstract class MessageGateway {
             connection = connectionFactory.createConnection();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            // create destination and producer or consumer
+            // create destination and producer or messageReceiverGateway
             setUp(jndiContext);
 
             // connect

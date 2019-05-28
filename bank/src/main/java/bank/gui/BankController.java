@@ -7,12 +7,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import jmsmessenger.gateways.IRouter;
 import jmsmessenger.models.BankInterestReply;
 import jmsmessenger.models.BankInterestRequest;
 import jmsmessenger.serializers.GsonSerializer;
 
-import javax.jms.*;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -35,17 +33,7 @@ public class BankController implements Initializable {
         BANK_ID = bank;
         gateway = new AsyncReceiverGateway(new GsonSerializer(BankInterestRequest.class, BankInterestReply.class),BANK_ID + BANK_CLIENT_REQUEST_QUEUE, BANK_CLIENT_RESPONSE_QUEUE) {
             @Override
-            public void setAggregationId(Message message, Message requestMessage) throws JMSException {
-                message.setIntProperty(AGGREGATION_ID, requestMessage.getIntProperty(AGGREGATION_ID));
-            }
-
-            @Override
-            public void contentBasedRouters(IRequest request, IResponse response, IRouter router) {
-
-            }
-
-            @Override
-            public void onMessageArrived(IRequest request, IResponse response, Message message) {
+            public void onMessageArrived(IRequest request, IResponse response, Integer aggregationId) {
                 ListViewLine listViewLine = new ListViewLine((BankInterestRequest) request);
                 lvBankRequestReply.getItems().add(listViewLine);
             }
@@ -65,11 +53,7 @@ public class BankController implements Initializable {
         BankInterestReply bankInterestReply = new BankInterestReply(interest, BANK_ID);
         listViewLine.setBankInterestReply(bankInterestReply);
 
-        try {
-            gateway.sendReply(listViewLine.getBankInterestRequest(), bankInterestReply);
-        } catch (JMSException e) {
-            e.printStackTrace();
-        }
+        gateway.sendReply(listViewLine.getBankInterestRequest(), bankInterestReply);
 
         lvBankRequestReply.refresh();
     }
