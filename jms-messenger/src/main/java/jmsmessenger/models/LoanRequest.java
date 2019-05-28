@@ -1,12 +1,14 @@
 package jmsmessenger.models;
 
+import jmsmessenger.gateways.IRequest;
+
 /**
  *
  * This class stores all information about a
  * request that a client submits to get a loan.
  *
  */
-public class LoanRequest {
+public class LoanRequest implements IRequest {
 
     private int ssn; // unique client number
     private int amount; // the ammount to borrow

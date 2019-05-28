@@ -1,11 +1,13 @@
 package jmsmessenger.models;
 
+import jmsmessenger.gateways.IResponse;
+
 /**
  * This class stores information about the bank reply
  *  to a loan request of the specific client
  * 
  */
-public class BankInterestReply {
+public class BankInterestReply implements IResponse {
 
     private double interest; // the interest that the bank offers for the requested loan
     private String bankId; // the unique quote identification of the bank which makes the offer

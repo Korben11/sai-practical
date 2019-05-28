@@ -1,11 +1,13 @@
 package jmsmessenger.models;
 
+import jmsmessenger.gateways.IRequest;
+
 /**
  *
  * This class stores all information about an request from a bank to offer
  * a loan to a specific client.
  */
-public class BankInterestRequest {
+public class BankInterestRequest implements IRequest {
 
     private int amount; // the ammount to borrow
     private int time; // the time-span of the loan in years
